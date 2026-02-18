@@ -1,8 +1,20 @@
+"use client"
+
+import { useEffect } from "react"
+import { supabase } from "../lib/supabase"
+
 export default function Home() {
+
+  useEffect(() => {
+    const testConnection = async () => {
+      const { data, error } = await supabase.from("test").select("*")
+      console.log(data, error)
+    }
+
+    testConnection()
+  }, [])
+
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Rey Control </h1>
-      <p>Sistema de administración en construcción...</p>
-    </div>
-  );
+    <h1>Rey Control  - Conectando...</h1>
+  )
 }
