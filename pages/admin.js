@@ -1,230 +1,100 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function Admin() {
+  const [trabajadores, setTrabajadores] = useState([]);
+  const [nombre, setNombre] = useState("");
+  const [pin, setPin] = useState("");
+  const [seleccionado, setSeleccionado] = useState(null);
+
   const [clientes, setClientes] = useState(0);
   const [total, setTotal] = useState(0);
-  const [cerrado, setCerrado] = useState(false);
 
-  const [displayTotal, setDisplayTotal] = useState(0);
-  const [displayClientes, setDisplayClientes] = useState(0);
+  useEffect(() => {
+    cargarTrabajadores();
+  }, []);
 
-  function hablar(texto) {
-    const mensaje = new SpeechSynthesisUtterance(texto);
-    mensaje.lang = "es-DO";
-    mensaje.rate = 0.9;
-    mensaje.pitch = 1;
-    mensaje.volume = 1;
-    window.speechSynthesis.speak(mensaje);
+  async function cargarTrabajadores() {
+    const { data } = await supabase.from("trabajadores").select("*");
+    setTrabajadores(data || []);
   }
 
-  function registrarVenta(precio) {
-    if (cerrado) return;
+  async function crearTrabajador() {
+    if (!nombre || !pin) return alert("Completa nombre y PIN");
 
-    const confirmar = confirm("¿Estás seguro que quieres agregar este cliente?");
-    if (!confirmar) return;
+    await supabase.from("trabajadores").insert([{ nombre, pin }]);
+    setNombre("");
+    setPin("");
+    cargarTrabajadores();
+  }
+
+  async function eliminarTrabajador(id) {
+    await supabase.from("trabajadores").delete().eq("id", id);
+    cargarTrabajadores();
+  }
+
+  async function registrarVenta(precio) {
+    if (!seleccionado) return alert("Selecciona un trabajador");
+
+    await supabase.from("ventas").insert([
+      { trabajador_id: seleccionado, precio },
+    ]);
 
     setClientes(prev => prev + 1);
     setTotal(prev => prev + precio);
-
-    hablar("Ta heavy mi rey, estás haciendo pasta mijo");
   }
 
-  const trabajador = total * 0.35;
+  const trabajadorGanancia = total * 0.35;
   const tu = total * 0.15;
   const socio = total * 0.5;
 
-  // 🔥 Animación Clientes
-  useEffect(() => {
-    let start = displayClientes;
-    let end = clientes;
-    if (start === end) return;
-
-    let increment = end > start ? 1 : -1;
-
-    const timer = setInterval(() => {
-      start += increment;
-      setDisplayClientes(start);
-      if (start === end) clearInterval(timer);
-    }, 40);
-
-    return () => clearInterval(timer);
-  }, [clientes]);
-
-  // 🔥 Animación Total
-  useEffect(() => {
-    let start = displayTotal;
-    let end = total;
-    if (start === end) return;
-
-    let increment = (end - start) / 20;
-
-    const timer = setInterval(() => {
-      start += increment;
-      if ((increment > 0 && start >= end) || (increment < 0 && start <= end)) {
-        start = end;
-        clearInterval(timer);
-      }
-      setDisplayTotal(Math.floor(start));
-    }, 30);
-
-    return () => clearInterval(timer);
-  }, [total]);
-
-  function cerrarDia() {
-    const confirmar = confirm("¿Seguro que deseas cerrar el día?");
-    if (!confirmar) return;
-
-    setCerrado(true);
-    hablar("Día cerrado mi rey, conteo final listo");
-  }
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <div style={{ padding: 20, background: "#111", minHeight: "100vh", color: "white" }}>
+      <h1>Imperio S&D 👑</h1>
 
-        <button
-          style={styles.backButton}
-          onClick={() => (window.location.href = "/login")}
-        >
-          ⬅ Volver
-        </button>
+      <h2>Crear Trabajador</h2>
 
-        <h1 style={styles.title}>Imperio S&D 👑</h1>
+      <input
+        placeholder="Nombre"
+        value={nombre}
+        onChange={(e) => setNombre(e.target.value)}
+      />
 
-        <div style={styles.stats}>
-          <p style={styles.line}>
-            Clientes 👨 : <span style={styles.number}>{displayClientes}</span>
-          </p>
+      <input
+        placeholder="PIN"
+        value={pin}
+        onChange={(e) => setPin(e.target.value)}
+      />
 
-          <p style={styles.line}>
-            Total Vendido 💰 : <span style={styles.number}>${displayTotal}</span>
-          </p>
+      <button onClick={crearTrabajador}>Crear</button>
 
-          <p style={styles.line}>
-            Trabajador 35% 👤 : <span style={styles.number}>${Math.floor(trabajador)}</span>
-          </p>
+      <h2>Lista de Trabajadores</h2>
 
-          <p style={styles.line}>
-            Tu 15% 👑 : <span style={styles.number}>${Math.floor(tu)}</span>
-          </p>
-
-          <p style={styles.line}>
-            Socio 50% 🤝 : <span style={styles.number}>${Math.floor(socio)}</span>
-          </p>
+      {trabajadores.map((t) => (
+        <div key={t.id} style={{ marginBottom: 10 }}>
+          {t.nombre}
+          <button onClick={() => setSeleccionado(t.id)}>
+            Seleccionar
+          </button>
+          <button onClick={() => eliminarTrabajador(t.id)}>
+            Eliminar
+          </button>
         </div>
+      ))}
 
-        {!cerrado && (
-          <>
-            <button style={styles.button} onClick={() => registrarVenta(120)}>
-              15 min - $120
-            </button>
+      <hr />
 
-            <button style={styles.button} onClick={() => registrarVenta(180)}>
-              30 min - $180
-            </button>
+      <h2>Ventas</h2>
 
-            <button style={styles.button} onClick={() => registrarVenta(260)}>
-              1 Hora - $260
-            </button>
+      <button onClick={() => registrarVenta(120)}>15 min - $120</button>
+      <button onClick={() => registrarVenta(180)}>30 min - $180</button>
+      <button onClick={() => registrarVenta(260)}>1 hora - $260</button>
 
-            <button style={styles.closeButton} onClick={cerrarDia}>
-              Cerrar Día 🔒
-            </button>
-          </>
-        )}
-
-        {cerrado && (
-          <p style={{ color: "red", marginTop: "15px" }}>
-            Día Cerrado
-          </p>
-        )}
-      </div>
+      <h3>Clientes: {clientes}</h3>
+      <h3>Total: ${total}</h3>
+      <h3>Trabajador 35%: ${trabajadorGanancia}</h3>
+      <h3>Tu 15%: ${tu}</h3>
+      <h3>Socio 50%: ${socio}</h3>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg, #0f0f0f, #1a1a1a)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "20px",
-  },
-
-  card: {
-    background: "linear-gradient(145deg, #1c1c1c, #111)",
-    padding: "30px",
-    borderRadius: "20px",
-    width: "100%",
-    maxWidth: "400px",
-    boxShadow: "0 10px 30px rgba(255, 140, 0, 0.3)",
-    display: "flex",
-    flexDirection: "column",
-  },
-
-  backButton: {
-    alignSelf: "flex-start",
-    marginBottom: "15px",
-    background: "transparent",
-    border: "1px solid gold",
-    color: "gold",
-    padding: "6px 12px",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-
-  title: {
-    fontSize: "28px",
-    marginBottom: "20px",
-    fontWeight: "bold",
-    textAlign: "center",
-    background: "linear-gradient(45deg, #FFD700, #FFB800, #FFA500)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  },
-
-  stats: {
-    marginBottom: "20px",
-  },
-
-  line: {
-    fontSize: "18px",
-    fontWeight: "bold",
-    marginBottom: "10px",
-    color: "#FFD700",
-  },
-
-  number: {
-    fontSize: "22px",
-    color: "#FFD700",
-  },
-
-  button: {
-    width: "100%",
-    padding: "14px",
-    marginTop: "10px",
-    borderRadius: "12px",
-    border: "none",
-    fontWeight: "bold",
-    fontSize: "15px",
-    cursor: "pointer",
-    background: "linear-gradient(45deg, #ff8c00, #ffb347)",
-    color: "black",
-    boxShadow: "0 4px 20px rgba(255,140,0,0.4)",
-  },
-
-  closeButton: {
-    width: "100%",
-    padding: "14px",
-    marginTop: "15px",
-    borderRadius: "12px",
-    border: "none",
-    fontWeight: "bold",
-    fontSize: "15px",
-    cursor: "pointer",
-    background: "linear-gradient(45deg, #ff0000, #b30000)",
-    color: "white",
-  },
-};
