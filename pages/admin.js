@@ -48,8 +48,22 @@ export default function Admin() {
 const styles = {
   container: {
     backgroundColor: "#000",
-    color: "gold",
-    minHeight: "100vh",
-    padding: 20,
+    color: "#fff",
+    height: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  input: {
+    padding: 10,
+    margin: 10,
+  },
+  button: {
+    padding: 12,
+    margin: 5,
+    backgroundColor: "gold",
+    border: "none",
+    cursor: "pointer",
   },
 };
