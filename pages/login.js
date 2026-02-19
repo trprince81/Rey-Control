@@ -4,7 +4,6 @@ import { supabase } from "../lib/supabase";
 
 export default function Login() {
   const router = useRouter();
-
   const [modo, setModo] = useState("admin");
   const [pinAdmin, setPinAdmin] = useState("");
   const [nombre, setNombre] = useState("");
@@ -45,14 +44,21 @@ export default function Login() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Imperio S&D 💰</h1>
 
-        <div style={styles.switch}>
-          <button onClick={() => setModo("admin")} style={styles.tab}>
-            Admin 👑
+        <h1 style={styles.logo}>IMPERIO S&D 💰</h1>
+
+        <div style={styles.tabs}>
+          <button
+            style={modo === "admin" ? styles.activeTab : styles.tab}
+            onClick={() => setModo("admin")}
+          >
+            👑 Admin
           </button>
-          <button onClick={() => setModo("trabajador")} style={styles.tab}>
-            Trabajador 👤
+          <button
+            style={modo === "trabajador" ? styles.activeTab : styles.tab}
+            onClick={() => setModo("trabajador")}
+          >
+            👤 Trabajador
           </button>
         </div>
 
@@ -60,14 +66,13 @@ export default function Login() {
           <>
             <input
               type="password"
-              placeholder="PIN Admin"
+              placeholder="PIN Privado"
               value={pinAdmin}
               onChange={(e) => setPinAdmin(e.target.value)}
               style={styles.input}
             />
-
             <button onClick={entrarAdmin} style={styles.button}>
-              Entrar como Admin 👑
+              Entrar al Imperio 👑
             </button>
           </>
         )}
@@ -81,7 +86,6 @@ export default function Login() {
               onChange={(e) => setNombre(e.target.value)}
               style={styles.input}
             />
-
             <input
               type="password"
               placeholder="PIN"
@@ -89,12 +93,12 @@ export default function Login() {
               onChange={(e) => setPinTrabajador(e.target.value)}
               style={styles.input}
             />
-
             <button onClick={entrarTrabajador} style={styles.button}>
-              Entrar como Trabajador 👤
+              Entrar al Sistema 👤
             </button>
           </>
         )}
+
       </div>
     </div>
   );
@@ -106,49 +110,74 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(135deg,#0f0f0f,#1c1c1c)",
+    background: "radial-gradient(circle at center, #1a1a1a, #000)",
   },
+
   card: {
-    background: "#1a1a1a",
-    padding: 30,
-    borderRadius: 20,
-    width: 350,
+    width: 380,
+    padding: 40,
+    borderRadius: 25,
+    background: "linear-gradient(145deg, #111, #1e1e1e)",
+    boxShadow: "0 0 60px rgba(255,215,0,0.3)",
     textAlign: "center",
-    boxShadow: "0 0 40px rgba(255,215,0,0.5)",
+    animation: "fadeIn 0.8s ease-in-out",
   },
-  title: {
-    color: "gold",
-    marginBottom: 20,
+
+  logo: {
+    fontSize: 28,
+    fontWeight: "bold",
+    background: "linear-gradient(90deg, gold, #ffcc00, gold)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    marginBottom: 25,
   },
-  switch: {
+
+  tabs: {
     display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 25,
   },
+
   tab: {
     flex: 1,
-    margin: 5,
     padding: 10,
-    background: "#333",
-    color: "white",
-    border: "none",
-    borderRadius: 8,
+    margin: 5,
+    borderRadius: 10,
+    border: "1px solid #333",
+    background: "#222",
+    color: "#aaa",
     cursor: "pointer",
   },
+
+  activeTab: {
+    flex: 1,
+    padding: 10,
+    margin: 5,
+    borderRadius: 10,
+    border: "1px solid gold",
+    background: "#111",
+    color: "gold",
+    cursor: "pointer",
+  },
+
   input: {
     width: "100%",
-    padding: 10,
+    padding: 12,
     marginBottom: 15,
-    borderRadius: 8,
+    borderRadius: 12,
     border: "none",
+    background: "#222",
+    color: "white",
+    fontSize: 14,
   },
+
   button: {
     width: "100%",
-    padding: 12,
-    background: "gold",
+    padding: 14,
+    borderRadius: 15,
     border: "none",
-    borderRadius: 10,
-    cursor: "pointer",
+    background: "linear-gradient(90deg, gold, #ffcc00)",
     fontWeight: "bold",
+    cursor: "pointer",
+    transition: "0.3s",
   },
 };
