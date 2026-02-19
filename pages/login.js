@@ -1,35 +1,44 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Login() {
+  const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
 
-  const ADMIN_PIN = "1234"; // cambia esto luego
+  const entrarTrabajador = async () => {
+    setError("");
 
-  const entrarAdmin = () => {
-    if (pin === ADMIN_PIN) {
-      window.location.href = "/admin";
-    } else {
-      alert("PIN incorrecto mi rey ❌");
-    }
-  };
+    const { data, error } = await supabase
+      .from("trabajadores")
+      .select("*")
+      .eq("nombre", nombre)
+      .eq("pin", pin)
+      .single();
 
-  const entrarTrabajador = () => {
-    if (!nombre || !pin) {
-      alert("Pon nombre y PIN 👀");
+    if (error || !data) {
+      setError("Nombre o PIN incorrecto");
       return;
     }
 
-    // guardamos temporalmente el nombre
-    localStorage.setItem("trabajadorNombre", nombre);
+    localStorage.setItem("trabajador", JSON.stringify(data));
+    router.push("/trabajador");
+  };
 
-    window.location.href = "/trabajador";
+  const entrarAdmin = () => {
+    if (pin === "1234") {
+      router.push("/admin");
+    } else {
+      setError("PIN Admin incorrecto");
+    }
   };
 
   return (
-    <div style={styles.fondo}>
+    <div style={styles.background}>
       <div style={styles.card}>
-        <h1 style={styles.titulo}>Imperio S&D 👑</h1>
+        <h1 style={styles.title}>Imperio S&D 👑</h1>
 
         <input
           placeholder="Nombre"
@@ -46,11 +55,13 @@ export default function Login() {
           style={styles.input}
         />
 
-        <button style={styles.boton} onClick={entrarTrabajador}>
+        {error && <p style={styles.error}>{error}</p>}
+
+        <button style={styles.button} onClick={entrarTrabajador}>
           Entrar como Trabajador 👤
         </button>
 
-        <button style={styles.boton} onClick={entrarAdmin}>
+        <button style={styles.button} onClick={entrarAdmin}>
           Entrar como Admin 👑
         </button>
       </div>
@@ -59,22 +70,22 @@ export default function Login() {
 }
 
 const styles = {
-  fondo: {
+  background: {
     height: "100vh",
-    background: "linear-gradient(135deg, #1a1a2e, #16213e)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    background: "radial-gradient(circle at center, #1a1a1a, #000)",
   },
   card: {
-    background: "#1e1e2f",
+    background: "#111",
     padding: "40px",
     borderRadius: "20px",
     boxShadow: "0 0 40px gold",
     textAlign: "center",
     width: "320px",
   },
-  titulo: {
+  title: {
     color: "gold",
     marginBottom: "20px",
   },
@@ -85,14 +96,18 @@ const styles = {
     borderRadius: "10px",
     border: "none",
   },
-  boton: {
+  button: {
     width: "100%",
     padding: "12px",
     marginTop: "10px",
-    borderRadius: "12px",
+    borderRadius: "10px",
     border: "none",
     background: "gold",
     fontWeight: "bold",
     cursor: "pointer",
+  },
+  error: {
+    color: "red",
+    fontSize: "14px",
   },
 };
