@@ -34,3 +34,8 @@ export default function Home() {
     </div>
   )
 }
+pages/
+   index.js
+   trabajador.js
+   admin.js
+   login.js
