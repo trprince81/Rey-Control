@@ -1,169 +1,67 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { supabase } from "../lib/supabase";
+import { useState, useEffect } from "react"
 
-export default function Trabajador() {
-  const router = useRouter();
-  const [nombre, setNombre] = useState("");
-  const [trabajadorId, setTrabajadorId] = useState(null);
-  const [ventas, setVentas] = useState([]);
+export default function PanelTrabajador() {
+  const [totalClientes, setTotalClientes] = useState(0)
 
-  useEffect(() => {
-    const id = localStorage.getItem("trabajador_id");
-    const nombreGuardado = localStorage.getItem("trabajador_nombre");
+  const agregarCliente = () => {
+    const nuevoTotal = totalClientes + 1
+    setTotalClientes(nuevoTotal)
 
-    if (!id) {
-      router.push("/login");
-      return;
+    // 🔊 Voz dominicana
+    const audio = new Audio("/pasta.mp3")
+    audio.play().catch(() => {})
+
+    // Vibración si es celular
+    if (navigator.vibrate) {
+      navigator.vibrate(100)
     }
-
-    setTrabajadorId(id);
-    setNombre(nombreGuardado);
-
-    cargarVentas(id);
-  }, []);
-
-  async function cargarVentas(id) {
-    const { data } = await supabase
-      .from("ventas")
-      .select("*")
-      .eq("trabajador_id", id);
-
-    setVentas(data || []);
-  }
-
-  async function agregarCliente(precio) {
-    if (!confirm("¿Seguro que deseas agregar este cliente?")) return;
-
-    await supabase.from("ventas").insert([
-      {
-        trabajador_id: trabajadorId,
-        precio: precio,
-      },
-    ]);
-
-    cargarVentas(trabajadorId);
-  }
-
-  const totalClientes = ventas.length;
-  const totalVendido = ventas.reduce((acc, v) => acc + Number(v.precio), 0);
-  const ganancia = totalVendido * 0.35;
-
-  function cerrarSesion() {
-    localStorage.clear();
-    router.push("/login");
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <div style={{ textAlign: "center", paddingTop: "60px" }}>
 
-        <img
-          src="/IMG_6992.JPG"
-          alt="Avatar"
-          style={styles.avatar}
-        />
+      {/* CONTADOR ANIMADO */}
+      <h1
+        style={{
+          fontSize: "60px",
+          fontWeight: "bold",
+          background: "linear-gradient(90deg, #FFD700, #FFA500)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          textShadow: "0 0 20px rgba(255,215,0,0.7)",
+          transition: "all 0.3s ease"
+        }}
+      >
+        {totalClientes}
+      </h1>
 
-        <h2 style={styles.nombre}>{nombre}</h2>
+      <p style={{ color: "white", fontSize: "20px", marginBottom: "40px" }}>
+        Total de Clientes 👑
+      </p>
 
-        <hr style={styles.linea} />
+      {/* BOTÓN GALÁCTICO */}
+      <button
+        onClick={agregarCliente}
+        style={{
+          position: "relative",
+          padding: "20px 50px",
+          fontSize: "22px",
+          fontWeight: "bold",
+          borderRadius: "20px",
+          border: "none",
+          cursor: "pointer",
+          color: "black",
+          background: "linear-gradient(135deg, #FFD700, #FFB700, #FFA500)",
+          boxShadow: "0 0 20px #FFD700, 0 0 40px rgba(255,215,0,0.6)",
+          overflow: "hidden",
+          transition: "0.2s"
+        }}
+        onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
+        onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+      >
+        Agregar Cliente 💰
+      </button>
 
-        <h3>Total de Clientes 👥</h3>
-        <p style={styles.numero}>{totalClientes}</p>
-
-        <h3>Tu 35% 💰</h3>
-        <p style={styles.numero}>${ganancia}</p>
-
-        <hr style={styles.linea} />
-
-        <h3>Agregar Cliente ⏱</h3>
-
-        <button style={styles.boton} onClick={() => agregarCliente(120)}>
-          15 Min — $120
-        </button>
-
-        <button style={styles.boton} onClick={() => agregarCliente(180)}>
-          30 Min — $180
-        </button>
-
-        <button style={styles.boton} onClick={() => agregarCliente(260)}>
-          1 Hora — $260
-        </button>
-
-        <button style={styles.botonSalir} onClick={cerrarSesion}>
-          Cerrar sesión
-        </button>
-
-      </div>
     </div>
-  );
+  )
 }
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg, #0f0f0f, #1a1a1a)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    color: "white",
-  },
-
-  card: {
-    background: "#1c1c1c",
-    padding: 30,
-    borderRadius: 20,
-    width: 350,
-    textAlign: "center",
-    boxShadow: "0 0 30px rgba(255, 215, 0, 0.4)",
-  },
-
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: "50%",
-    objectFit: "cover",
-    margin: "0 auto 15px auto",
-    boxShadow: "0 0 25px rgba(0, 100, 255, 0.7)",
-  },
-
-  nombre: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-
-  linea: {
-    width: "100%",
-    margin: "20px 0",
-    opacity: 0.3,
-  },
-
-  numero: {
-    fontSize: 28,
-    color: "gold",
-    marginBottom: 15,
-  },
-
-  boton: {
-    width: "100%",
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 10,
-    border: "none",
-    background: "gold",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
-
-  botonSalir: {
-    marginTop: 15,
-    padding: 10,
-    width: "100%",
-    background: "red",
-    border: "none",
-    color: "white",
-    cursor: "pointer",
-    borderRadius: 8,
-  }
-};
