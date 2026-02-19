@@ -30,27 +30,50 @@ export default function Admin() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
+        
+        <button
+          style={styles.backButton}
+          onClick={() => (window.location.href = "/login")}
+        >
+          ⬅ Volver
+        </button>
+
         <h1 style={styles.title}>Imperio S&D 👑</h1>
 
         <div style={styles.stats}>
-          <p style={styles.goldText}>
-            Clientes 👨: <span style={styles.number}>{clientes}</span>
+          <p style={styles.line}>
+            <span style={styles.goldText}>Clientes</span>
+            <span style={styles.emoji}> 👨 </span>
+            <span style={styles.goldText}>: </span>
+            <span style={styles.number}>{clientes}</span>
           </p>
 
-          <p style={styles.goldText}>
-            Total Vendido 💰: <span style={styles.number}>${total}</span>
+          <p style={styles.line}>
+            <span style={styles.goldText}>Total Vendido</span>
+            <span style={styles.emoji}> 💰 </span>
+            <span style={styles.goldText}>: </span>
+            <span style={styles.number}>${total}</span>
           </p>
 
-          <p style={styles.goldText}>
-            Trabajador 35% 👤: <span style={styles.number}>${trabajador}</span>
+          <p style={styles.line}>
+            <span style={styles.goldText}>Trabajador 35%</span>
+            <span style={styles.emoji}> 👤 </span>
+            <span style={styles.goldText}>: </span>
+            <span style={styles.number}>${trabajador}</span>
           </p>
 
-          <p style={styles.goldText}>
-            Tu 15% 👑: <span style={styles.number}>${tu}</span>
+          <p style={styles.line}>
+            <span style={styles.goldText}>Tu 15%</span>
+            <span style={styles.emoji}> 👑 </span>
+            <span style={styles.goldText}>: </span>
+            <span style={styles.number}>${tu}</span>
           </p>
 
-          <p style={styles.goldText}>
-            Socio 50% 🤝: <span style={styles.number}>${socio}</span>
+          <p style={styles.line}>
+            <span style={styles.goldText}>Socio 50%</span>
+            <span style={styles.emoji}> 🤝 </span>
+            <span style={styles.goldText}>: </span>
+            <span style={styles.number}>${socio}</span>
           </p>
         </div>
 
@@ -74,7 +97,11 @@ export default function Admin() {
           </>
         )}
 
-        {cerrado && <p style={{ color: "red", marginTop: "15px" }}>Día Cerrado</p>}
+        {cerrado && (
+          <p style={{ color: "red", marginTop: "15px" }}>
+            Día Cerrado
+          </p>
+        )}
       </div>
     </div>
   );
@@ -101,6 +128,17 @@ const styles = {
     flexDirection: "column",
   },
 
+  backButton: {
+    alignSelf: "flex-start",
+    marginBottom: "15px",
+    background: "transparent",
+    border: "1px solid gold",
+    color: "gold",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    cursor: "pointer",
+  },
+
   title: {
     fontSize: "28px",
     marginBottom: "20px",
@@ -113,20 +151,27 @@ const styles = {
 
   stats: {
     marginBottom: "20px",
-    lineHeight: "1.8",
+  },
+
+  line: {
+    fontSize: "18px",
+    fontWeight: "bold",
+    marginBottom: "10px",
   },
 
   goldText: {
-    fontSize: "18px",
-    fontWeight: "bold",
-    marginBottom: "8px",
     background: "linear-gradient(45deg, #FFD700, #FFB800, #FFA500)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },
 
+  emoji: {
+    fontSize: "18px",
+  },
+
   number: {
     fontSize: "20px",
+    color: "#FFD700",
   },
 
   button: {
