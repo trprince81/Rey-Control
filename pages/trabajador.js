@@ -1,50 +1,134 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "../lib/supabase";
 
 export default function Trabajador() {
-  const [clientes, setClientes] = useState(0);
-  const [total, setTotal] = useState(0);
+  const router = useRouter();
+  const [nombre, setNombre] = useState("");
+  const [trabajadorId, setTrabajadorId] = useState(null);
+  const [ventas, setVentas] = useState([]);
 
-  function registrarVenta(precio) {
-    setClientes(clientes + 1);
-    setTotal(total + precio);
+  useEffect(() => {
+    const id = localStorage.getItem("trabajador_id");
+    const nombreGuardado = localStorage.getItem("trabajador_nombre");
+
+    if (!id) {
+      router.push("/");
+      return;
+    }
+
+    setTrabajadorId(id);
+    setNombre(nombreGuardado);
+
+    cargarVentas(id);
+  }, []);
+
+  async function cargarVentas(id) {
+    const { data, error } = await supabase
+      .from("ventas")
+      .select("*")
+      .eq("trabajador_id", id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setVentas(data || []);
   }
 
-  const comision = total * 0.35;
+  const total = ventas.reduce((acc, v) => acc + v.precio, 0);
+  const ganancia = total * 0.35;
+
+  function cerrarSesion() {
+    localStorage.removeItem("trabajador_id");
+    localStorage.removeItem("trabajador_nombre");
+    router.push("/");
+  }
 
   return (
     <div style={styles.container}>
-      <h2>Panel Trabajador</h2>
+      <div style={styles.card}>
 
-      <p>Clientes: {clientes}</p>
-      <p>Total Vendido: ${total}</p>
-      <p>Tu 35%: ${comision}</p>
+        <img
+          src="/IMG_6992.JPG"
+          alt="Avatar"
+          style={styles.avatar}
+        />
 
-      <button onClick={() => registrarVenta(120)}>15 min - $120</button>
-      <button onClick={() => registrarVenta(180)}>30 min - $180</button>
-      <button onClick={() => registrarVenta(260)}>1 Hora - $260</button>
+        <h2 style={styles.nombre}>{nombre}</h2>
+
+        <hr style={styles.linea} />
+
+        <h3>Total Vendido 💰</h3>
+        <p style={styles.numero}>${total}</p>
+
+        <h3>Tu 35% 👑</h3>
+        <p style={styles.numero}>${ganancia}</p>
+
+        <button style={styles.botonSalir} onClick={cerrarSesion}>
+          Cerrar sesión
+        </button>
+
+      </div>
     </div>
   );
 }
 
 const styles = {
   container: {
-    backgroundColor: "#000",
-    color: "#fff",
-    height: "100vh",
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #0f0f0f, #1a1a1a)",
     display: "flex",
-    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
+    color: "white",
   },
-  input: {
+
+  card: {
+    background: "#1c1c1c",
+    padding: 30,
+    borderRadius: 20,
+    width: 320,
+    textAlign: "center",
+    boxShadow: "0 0 30px rgba(0, 100, 255, 0.4)",
+  },
+
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: "50%",
+    objectFit: "cover",
+    margin: "0 auto 15px auto",
+    boxShadow: "0 0 25px rgba(0, 100, 255, 0.7)",
+  },
+
+  nombre: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+
+  linea: {
+    width: "100%",
+    margin: "20px 0",
+    opacity: 0.3,
+  },
+
+  numero: {
+    fontSize: 24,
+    color: "gold",
+    marginBottom: 15,
+  },
+
+  botonSalir: {
+    marginTop: 15,
     padding: 10,
-    margin: 10,
-  },
-  button: {
-    padding: 12,
-    margin: 5,
-    backgroundColor: "gold",
+    width: "100%",
+    background: "red",
     border: "none",
+    color: "white",
     cursor: "pointer",
-  },
+    borderRadius: 8,
+  }
 };
