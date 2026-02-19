@@ -13,7 +13,7 @@ export default function Trabajador() {
     const nombreGuardado = localStorage.getItem("trabajador_nombre");
 
     if (!id) {
-      router.push("/");
+      router.push("/login");
       return;
     }
 
@@ -24,26 +24,34 @@ export default function Trabajador() {
   }, []);
 
   async function cargarVentas(id) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("ventas")
       .select("*")
       .eq("trabajador_id", id);
 
-    if (error) {
-      console.error(error);
-      return;
-    }
-
     setVentas(data || []);
   }
 
-  const total = ventas.reduce((acc, v) => acc + v.precio, 0);
-  const ganancia = total * 0.35;
+  async function agregarCliente(precio) {
+    if (!confirm("¿Seguro que deseas agregar este cliente?")) return;
+
+    await supabase.from("ventas").insert([
+      {
+        trabajador_id: trabajadorId,
+        precio: precio,
+      },
+    ]);
+
+    cargarVentas(trabajadorId);
+  }
+
+  const totalClientes = ventas.length;
+  const totalVendido = ventas.reduce((acc, v) => acc + Number(v.precio), 0);
+  const ganancia = totalVendido * 0.35;
 
   function cerrarSesion() {
-    localStorage.removeItem("trabajador_id");
-    localStorage.removeItem("trabajador_nombre");
-    router.push("/");
+    localStorage.clear();
+    router.push("/login");
   }
 
   return (
@@ -60,11 +68,27 @@ export default function Trabajador() {
 
         <hr style={styles.linea} />
 
-        <h3>Total Vendido 💰</h3>
-        <p style={styles.numero}>${total}</p>
+        <h3>Total de Clientes 👥</h3>
+        <p style={styles.numero}>{totalClientes}</p>
 
-        <h3>Tu 35% 👑</h3>
+        <h3>Tu 35% 💰</h3>
         <p style={styles.numero}>${ganancia}</p>
+
+        <hr style={styles.linea} />
+
+        <h3>Agregar Cliente ⏱</h3>
+
+        <button style={styles.boton} onClick={() => agregarCliente(120)}>
+          15 Min — $120
+        </button>
+
+        <button style={styles.boton} onClick={() => agregarCliente(180)}>
+          30 Min — $180
+        </button>
+
+        <button style={styles.boton} onClick={() => agregarCliente(260)}>
+          1 Hora — $260
+        </button>
 
         <button style={styles.botonSalir} onClick={cerrarSesion}>
           Cerrar sesión
@@ -89,9 +113,9 @@ const styles = {
     background: "#1c1c1c",
     padding: 30,
     borderRadius: 20,
-    width: 320,
+    width: 350,
     textAlign: "center",
-    boxShadow: "0 0 30px rgba(0, 100, 255, 0.4)",
+    boxShadow: "0 0 30px rgba(255, 215, 0, 0.4)",
   },
 
   avatar: {
@@ -116,9 +140,20 @@ const styles = {
   },
 
   numero: {
-    fontSize: 24,
+    fontSize: 28,
     color: "gold",
     marginBottom: 15,
+  },
+
+  boton: {
+    width: "100%",
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 10,
+    border: "none",
+    background: "gold",
+    fontWeight: "bold",
+    cursor: "pointer",
   },
 
   botonSalir: {
