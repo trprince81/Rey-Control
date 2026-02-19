@@ -28,9 +28,23 @@ export default function Trabajador() {
 
 const styles = {
   container: {
-    backgroundColor: "#111",
-    color: "white",
+    backgroundColor: "#000",
+    color: "#fff",
     height: "100vh",
-    padding: 20,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  input: {
+    padding: 10,
+    margin: 10,
+  },
+  button: {
+    padding: 12,
+    margin: 5,
+    backgroundColor: "gold",
+    border: "none",
+    cursor: "pointer",
   },
 };
