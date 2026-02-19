@@ -1,115 +1,124 @@
-import { useEffect, useState } from "react"
-import { supabase } from "../lib/supabaseClient"
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function Trabajador() {
-  const [totalClientes, setTotalClientes] = useState(0)
-  const [trabajadorId, setTrabajadorId] = useState(null)
+  const [trabajador, setTrabajador] = useState(null);
+  const [totalClientes, setTotalClientes] = useState(0);
+  const [animado, setAnimado] = useState(0);
 
   useEffect(() => {
-    const id = localStorage.getItem("trabajador_id")
-    if (id) {
-      setTrabajadorId(id)
-      cargarClientes(id)
+    const data = localStorage.getItem("trabajador");
+    if (!data) {
+      window.location.href = "/login";
+      return;
     }
-  }, [])
+
+    const parsed = JSON.parse(data);
+    setTrabajador(parsed);
+    cargarClientes(parsed.id);
+  }, []);
 
   async function cargarClientes(id) {
-    const { data, error } = await supabase
+    const { count } = await supabase
       .from("ventas")
-      .select("*")
-      .eq("trabajador_id", id)
+      .select("*", { count: "exact", head: true })
+      .eq("trabajador_id", id);
 
-    if (!error && data) {
-      setTotalClientes(data.length)
-    }
+    setTotalClientes(count || 0);
   }
 
-  async function agregarCliente() {
-    if (!trabajadorId) return
+  // Animación de números estilo contador
+  useEffect(() => {
+    let inicio = 0;
+    const intervalo = setInterval(() => {
+      inicio++;
+      setAnimado(inicio);
+      if (inicio >= totalClientes) {
+        clearInterval(intervalo);
+      }
+    }, 50);
+  }, [totalClientes]);
 
-    const confirmar = confirm("¿Seguro que quieres agregar un cliente?")
-    if (!confirmar) return
+  async function agregarCliente() {
+    if (!trabajador) return;
+
+    const confirmar = confirm("¿Seguro que quieres agregar un cliente?");
+    if (!confirmar) return;
 
     const { error } = await supabase.from("ventas").insert([
       {
-        trabajador_id: trabajadorId,
-        precio: 0
-      }
-    ])
+        trabajador_id: trabajador.id,
+        precio: 1,
+      },
+    ]);
 
-    if (!error) {
-      cargarClientes(trabajadorId)
-    } else {
-      alert("Error agregando cliente")
+    if (error) {
+      alert("Error agregando cliente");
+      return;
     }
+
+    // 🔊 SONIDO DOMINICANO
+    const audio = new Audio("/pasta.mp3");
+    audio.play();
+
+    cargarClientes(trabajador.id);
   }
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.titulo}>Panel del Trabajador 👑</h1>
+    <div
+      style={{
+        height: "100vh",
+        background: "radial-gradient(circle at top, #111, #000)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "white",
+        flexDirection: "column",
+      }}
+    >
+      <img
+        src="/IMG_6992.JPG"
+        style={{
+          width: "120px",
+          borderRadius: "50%",
+          marginBottom: "15px",
+          boxShadow: "0 0 20px gold",
+        }}
+      />
 
-      <div style={styles.card}>
-        <h2 style={styles.label}>Total de Clientes 👑</h2>
+      <h2 style={{ marginBottom: "10px" }}>
+        {trabajador?.nombre}
+      </h2>
 
-        <div style={styles.numero}>
-          {totalClientes}
-        </div>
+      <h1
+        style={{
+          fontSize: "60px",
+          background: "linear-gradient(45deg, gold, orange)",
+          WebkitBackgroundClip: "text",
+          color: "transparent",
+          marginBottom: "10px",
+        }}
+      >
+        {animado}
+      </h1>
 
-        <button onClick={agregarCliente} style={styles.boton}>
-          Agregar Cliente 💰
-        </button>
-      </div>
+      <p style={{ marginBottom: "20px" }}>👥 Total de Clientes</p>
+
+      <button
+        onClick={agregarCliente}
+        style={{
+          padding: "15px 40px",
+          fontSize: "18px",
+          borderRadius: "40px",
+          border: "none",
+          background: "linear-gradient(45deg, gold, orange)",
+          cursor: "pointer",
+          boxShadow: "0 0 25px gold",
+          fontWeight: "bold",
+        }}
+      >
+        💰 Agregar Cliente
+      </button>
     </div>
-  )
-}
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column",
-    color: "white",
-    fontFamily: "Arial"
-  },
-  titulo: {
-    fontSize: "32px",
-    marginBottom: "30px",
-    color: "gold",
-    textShadow: "0 0 20px orange"
-  },
-  card: {
-    background: "rgba(0,0,0,0.6)",
-    padding: "40px",
-    borderRadius: "20px",
-    textAlign: "center",
-    boxShadow: "0 0 40px rgba(255,215,0,0.4)"
-  },
-  label: {
-    fontSize: "22px",
-    marginBottom: "20px",
-    color: "#ffd700"
-  },
-  numero: {
-    fontSize: "80px",
-    fontWeight: "bold",
-    marginBottom: "30px",
-    background: "linear-gradient(45deg, gold, orange)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    textShadow: "0 0 25px gold"
-  },
-  boton: {
-    padding: "15px 40px",
-    fontSize: "18px",
-    borderRadius: "40px",
-    border: "none",
-    cursor: "pointer",
-    background: "linear-gradient(45deg, gold, orange)",
-    boxShadow: "0 0 25px gold",
-    fontWeight: "bold",
-    transition: "0.3s"
-  }
+  );
 }
