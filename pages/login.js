@@ -1,113 +1,150 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { supabase } from "../lib/supabaseClient";
 
 export default function Login() {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [pin, setPin] = useState("");
-  const [error, setError] = useState("");
 
-  const handleLoginTrabajador = async () => {
-    setError("");
-
-    const { data, error } = await supabase
-      .from("trabajadores")
-      .select("*")
-      .eq("nombre", nombre)
-      .eq("pin", pin)
-      .single();
-
-    if (error || !data) {
-      setError("Nombre o PIN incorrecto");
+  const entrarTrabajador = () => {
+    if (!nombre || !pin) {
+      alert("Completa nombre y PIN");
       return;
     }
-
-    localStorage.setItem("trabajador", JSON.stringify(data));
     router.push("/trabajador");
   };
 
-  const handleLoginAdmin = () => {
-    if (pin === "1234") {
-      router.push("/admin");
-    } else {
-      setError("PIN de admin incorrecto");
+  const entrarAdmin = () => {
+    if (pin !== "1234") {
+      alert("PIN incorrecto");
+      return;
     }
+    router.push("/admin");
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Imperio S&D 👑</h1>
+    <div className="container">
+      <div className="overlay"></div>
+
+      <div className="card">
+        <h1>Imperio S&D 👑</h1>
 
         <input
-          style={styles.input}
+          type="text"
           placeholder="Nombre"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
         />
 
         <input
-          style={styles.input}
-          placeholder="PIN"
           type="password"
+          placeholder="PIN"
           value={pin}
           onChange={(e) => setPin(e.target.value)}
         />
 
-        {error && <p style={styles.error}>{error}</p>}
-
-        <button style={styles.button} onClick={handleLoginTrabajador}>
-          Entrar como Trabajador 👤
+        <button onClick={entrarTrabajador}>
+          Entrar como Trabajador 🎮
         </button>
 
-        <button style={styles.button} onClick={handleLoginAdmin}>
+        <button className="adminBtn" onClick={entrarAdmin}>
           Entrar como Admin 👑
         </button>
       </div>
+
+      <style jsx>{`
+        .container {
+          height: 100vh;
+          background: url("/01.JPG") center center / cover no-repeat;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+
+        .overlay {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(4px);
+        }
+
+        .card {
+          position: relative;
+          z-index: 2;
+          width: 360px;
+          padding: 40px;
+          border-radius: 25px;
+          background: rgba(20, 20, 25, 0.95);
+          text-align: center;
+          box-shadow:
+            0 0 30px rgba(255, 215, 0, 0.4),
+            0 0 60px rgba(255, 215, 0, 0.2);
+          animation: fadeIn 0.6s ease;
+        }
+
+        h1 {
+          color: gold;
+          margin-bottom: 25px;
+          font-size: 24px;
+          letter-spacing: 1px;
+        }
+
+        input {
+          width: 100%;
+          padding: 12px;
+          margin-bottom: 15px;
+          border-radius: 12px;
+          border: none;
+          background: #2b2b35;
+          color: white;
+          font-size: 14px;
+        }
+
+        input:focus {
+          outline: none;
+          box-shadow: 0 0 10px gold;
+        }
+
+        button {
+          width: 100%;
+          padding: 12px;
+          margin-top: 10px;
+          border-radius: 20px;
+          border: none;
+          background: linear-gradient(145deg, gold, #c9a000);
+          font-weight: bold;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        button:hover {
+          transform: scale(1.05);
+          box-shadow: 0 0 20px gold;
+        }
+
+        .adminBtn {
+          background: linear-gradient(145deg, #444, #222);
+          color: gold;
+          border: 1px solid gold;
+        }
+
+        .adminBtn:hover {
+          box-shadow: 0 0 15px gold;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "linear-gradient(135deg, #000000, #1a1a1a)"
-  },
-  card: {
-    background: "#111",
-    padding: "40px",
-    borderRadius: "20px",
-    boxShadow: "0 0 40px gold",
-    display: "flex",
-    flexDirection: "column",
-    width: "320px"
-  },
-  title: {
-    color: "gold",
-    textAlign: "center",
-    marginBottom: "20px"
-  },
-  input: {
-    marginBottom: "15px",
-    padding: "10px",
-    borderRadius: "10px",
-    border: "none"
-  },
-  button: {
-    marginTop: "10px",
-    padding: "12px",
-    borderRadius: "12px",
-    border: "none",
-    background: "gold",
-    fontWeight: "bold",
-    cursor: "pointer"
-  },
-  error: {
-    color: "red",
-    textAlign: "center"
-  }
-};
