@@ -1,124 +1,118 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Trabajador() {
-  const [trabajador, setTrabajador] = useState(null);
-  const [totalClientes, setTotalClientes] = useState(0);
-  const [animado, setAnimado] = useState(0);
+  const [trabajadorId, setTrabajadorId] = useState(null);
+  const [montoPersonalizado, setMontoPersonalizado] = useState("");
+  const [mensaje, setMensaje] = useState("");
 
-  useEffect(() => {
-    const data = localStorage.getItem("trabajador");
-    if (!data) {
-      window.location.href = "/login";
+  // ⚡ IMPORTANTE: aquí debes poner el ID real del trabajador logueado
+  // Por ahora lo dejamos manual (luego lo hacemos automático con login)
+  const ID_TRABAJADOR = localStorage.getItem("trabajador_id");
+
+  const registrarVenta = async (monto) => {
+    if (!ID_TRABAJADOR) {
+      alert("No hay trabajador logueado");
       return;
     }
 
-    const parsed = JSON.parse(data);
-    setTrabajador(parsed);
-    cargarClientes(parsed.id);
-  }, []);
-
-  async function cargarClientes(id) {
-    const { count } = await supabase
-      .from("ventas")
-      .select("*", { count: "exact", head: true })
-      .eq("trabajador_id", id);
-
-    setTotalClientes(count || 0);
-  }
-
-  // Animación de números estilo contador
-  useEffect(() => {
-    let inicio = 0;
-    const intervalo = setInterval(() => {
-      inicio++;
-      setAnimado(inicio);
-      if (inicio >= totalClientes) {
-        clearInterval(intervalo);
-      }
-    }, 50);
-  }, [totalClientes]);
-
-  async function agregarCliente() {
-    if (!trabajador) return;
-
-    const confirmar = confirm("¿Seguro que quieres agregar un cliente?");
-    if (!confirmar) return;
+    const total_trabajador = monto * 0.35;
+    const total_dueno = monto * 0.15;
+    const total_socio = monto * 0.5;
 
     const { error } = await supabase.from("ventas").insert([
       {
-        trabajador_id: trabajador.id,
-        precio: 1,
+        trabajador_id: ID_TRABAJADOR,
+        precio: monto,
+        total_trabajador,
+        total_dueno,
+        total_socio,
       },
     ]);
 
     if (error) {
-      alert("Error agregando cliente");
-      return;
+      console.log(error);
+      setMensaje("❌ Error guardando venta");
+    } else {
+      setMensaje("🔥 Venta registrada");
+      new Audio("/pasta.mp3").play().catch(()=>{});
     }
-
-    // 🔊 SONIDO DOMINICANO
-    const audio = new Audio("/pasta.mp3");
-    audio.play();
-
-    cargarClientes(trabajador.id);
-  }
+  };
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        background: "radial-gradient(circle at top, #111, #000)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        color: "white",
-        flexDirection: "column",
-      }}
-    >
-      <img
-        src="/IMG_6992.JPG"
-        style={{
-          width: "120px",
-          borderRadius: "50%",
-          marginBottom: "15px",
-          boxShadow: "0 0 20px gold",
-        }}
-      />
+    <div style={styles.container}>
+      <h1 style={styles.title}>Panel Trabajador 👑</h1>
 
-      <h2 style={{ marginBottom: "10px" }}>
-        {trabajador?.nombre}
-      </h2>
+      <div style={styles.buttons}>
+        <button style={styles.btn} onClick={() => registrarVenta(120)}>
+          15 Min - 120
+        </button>
 
-      <h1
-        style={{
-          fontSize: "60px",
-          background: "linear-gradient(45deg, gold, orange)",
-          WebkitBackgroundClip: "text",
-          color: "transparent",
-          marginBottom: "10px",
-        }}
-      >
-        {animado}
-      </h1>
+        <button style={styles.btn} onClick={() => registrarVenta(180)}>
+          30 Min - 180
+        </button>
 
-      <p style={{ marginBottom: "20px" }}>👥 Total de Clientes</p>
+        <button style={styles.btn} onClick={() => registrarVenta(260)}>
+          1 Hora - 260
+        </button>
 
-      <button
-        onClick={agregarCliente}
-        style={{
-          padding: "15px 40px",
-          fontSize: "18px",
-          borderRadius: "40px",
-          border: "none",
-          background: "linear-gradient(45deg, gold, orange)",
-          cursor: "pointer",
-          boxShadow: "0 0 25px gold",
-          fontWeight: "bold",
-        }}
-      >
-        💰 Agregar Cliente
-      </button>
+        <div style={{ marginTop: 20 }}>
+          <input
+            type="number"
+            placeholder="Monto personalizado"
+            value={montoPersonalizado}
+            onChange={(e) => setMontoPersonalizado(e.target.value)}
+            style={styles.input}
+          />
+
+          <button
+            style={styles.btn}
+            onClick={() =>
+              registrarVenta(parseFloat(montoPersonalizado))
+            }
+          >
+            Registrar Personalizado
+          </button>
+        </div>
+
+        <p style={{ marginTop: 20 }}>{mensaje}</p>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    background: "black",
+    color: "gold",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: "32px",
+    marginBottom: "30px",
+  },
+  buttons: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+  },
+  btn: {
+    padding: "15px",
+    background: "gold",
+    color: "black",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+  input: {
+    padding: "10px",
+    marginBottom: "10px",
+    borderRadius: "8px",
+    border: "none",
+  },
+};
