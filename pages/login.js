@@ -1,44 +1,100 @@
-import { useRouter } from "next/router";
 import { useState } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "../lib/supabase";
 
 export default function Login() {
   const router = useRouter();
-  const [pin, setPin] = useState("");
 
-  const ADMIN_PIN = "caro13"; //
+  const [modo, setModo] = useState("admin");
+  const [pinAdmin, setPinAdmin] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [pinTrabajador, setPinTrabajador] = useState("");
 
-  function handleLogin(role) {
-    if (role === "admin") {
-      if (pin.trim() === ADMIN_PIN) {
-        router.push("/admin");
-      } else {
-        alert("PIN incorrecto");
-      }
+  async function entrarAdmin() {
+    if (pinAdmin === "carolynsd") {
+      router.push("/admin");
     } else {
-      router.push("/trabajador");
+      alert("PIN incorrecto ❌");
     }
+  }
+
+  async function entrarTrabajador() {
+    if (!nombre || !pinTrabajador) {
+      alert("Completa todos los campos");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("trabajadores")
+      .select("*")
+      .eq("nombre", nombre)
+      .eq("pin", pinTrabajador)
+      .single();
+
+    if (error || !data) {
+      alert("Nombre o PIN incorrecto ❌");
+      return;
+    }
+
+    localStorage.setItem("trabajador_id", data.id);
+    localStorage.setItem("trabajador_nombre", data.nombre);
+
+    router.push("/trabajador");
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Imperio S&D 👑</h1>
+        <h1 style={styles.title}>Imperio S&D 💰</h1>
 
-        <input
-          type="password"
-          placeholder="PIN Admin"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-          style={styles.input}
-        />
+        <div style={styles.switch}>
+          <button onClick={() => setModo("admin")} style={styles.tab}>
+            Admin 👑
+          </button>
+          <button onClick={() => setModo("trabajador")} style={styles.tab}>
+            Trabajador 👤
+          </button>
+        </div>
 
-        <button style={styles.button} onClick={() => handleLogin("admin")}>
-          Entrar como Admin 👑
-        </button>
+        {modo === "admin" && (
+          <>
+            <input
+              type="password"
+              placeholder="PIN Admin"
+              value={pinAdmin}
+              onChange={(e) => setPinAdmin(e.target.value)}
+              style={styles.input}
+            />
 
-        <button style={styles.button} onClick={() => handleLogin("trabajador")}>
-          Entrar como Trabajador 👤
-        </button>
+            <button onClick={entrarAdmin} style={styles.button}>
+              Entrar como Admin 👑
+            </button>
+          </>
+        )}
+
+        {modo === "trabajador" && (
+          <>
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              style={styles.input}
+            />
+
+            <input
+              type="password"
+              placeholder="PIN"
+              value={pinTrabajador}
+              onChange={(e) => setPinTrabajador(e.target.value)}
+              style={styles.input}
+            />
+
+            <button onClick={entrarTrabajador} style={styles.button}>
+              Entrar como Trabajador 👤
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -47,56 +103,52 @@ export default function Login() {
 const styles = {
   container: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #0f0f0f, #1a1a1a)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "20px",
+    background: "linear-gradient(135deg,#0f0f0f,#1c1c1c)",
   },
-
   card: {
-    background: "linear-gradient(145deg, #1c1c1c, #111)",
-    padding: "30px",
-    borderRadius: "20px",
-    width: "100%",
-    maxWidth: "350px",
-    boxShadow: "0 10px 30px rgba(255, 140, 0, 0.3)",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
+    background: "#1a1a1a",
+    padding: 30,
+    borderRadius: 20,
+    width: 350,
+    textAlign: "center",
+    boxShadow: "0 0 40px rgba(255,215,0,0.5)",
   },
-
   title: {
-    fontSize: "26px",
-    marginBottom: "20px",
-    background: "linear-gradient(45deg, orange, gold)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    fontWeight: "bold",
+    color: "gold",
+    marginBottom: 20,
   },
-
+  switch: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  tab: {
+    flex: 1,
+    margin: 5,
+    padding: 10,
+    background: "#333",
+    color: "white",
+    border: "none",
+    borderRadius: 8,
+    cursor: "pointer",
+  },
   input: {
     width: "100%",
-    padding: "12px",
-    marginBottom: "15px",
-    borderRadius: "10px",
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 8,
     border: "none",
-    outline: "none",
-    backgroundColor: "#222",
-    color: "white",
   },
-
   button: {
     width: "100%",
-    padding: "14px",
-    marginTop: "10px",
-    borderRadius: "12px",
+    padding: 12,
+    background: "gold",
     border: "none",
-    fontWeight: "bold",
-    fontSize: "15px",
+    borderRadius: 10,
     cursor: "pointer",
-    background: "linear-gradient(45deg, #ff8c00, #ffb347)",
-    color: "black",
-    boxShadow: "0 4px 20px rgba(255,140,0,0.4)",
+    fontWeight: "bold",
   },
 };
