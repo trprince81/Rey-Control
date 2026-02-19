@@ -7,21 +7,24 @@ export default function Login() {
   const [pin, setPin] = useState("");
 
   async function loginTrabajador() {
-    const { data, error } = await supabase
-      .from("trabajadores")
-      .select("*")
-      .eq("nombre", nombre)
-      .eq("pin", pin)
-      .single();
+  const { data, error } = await supabase
+    .from("trabajadores")
+    .select("*")
+    .eq("nombre", nombre)
+    .eq("pin", pin)
+    .single();
 
-    if (error || !data) {
-      alert("Nombre o PIN incorrecto ❌");
-      return;
-    }
-
-    localStorage.setItem("trabajador", JSON.stringify(data));
-    window.location.href = "/trabajador";
+  if (error || !data) {
+    alert("Nombre o PIN incorrecto ❌");
+    return;
   }
+
+  // 🔥 AQUÍ ESTÁ LO IMPORTANTE
+  localStorage.setItem("trabajador_id", data.id);
+  localStorage.setItem("trabajador_nombre", data.nombre);
+
+  window.location.href = "/trabajador";
+}
 
   function loginAdmin() {
     if (pin === "1234") {
