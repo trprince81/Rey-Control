@@ -34,12 +34,26 @@ export default function Admin() {
         <h1 style={styles.title}>Panel Admin 👑</h1>
 
         <div style={styles.stats}>
-          <p>Clientes: {clientes}</p>
-          <p>Total Vendido: ${total}</p>
-          <p>Trabajador 35%: ${trabajador}</p>
-          <p>Tu 15%: ${tu}</p>
-          <p>Socio 50%: ${socio}</p>
-        </div>
+  <p style={styles.goldText}>
+    Clientes 👨: {clientes}
+  </p>
+
+  <p style={styles.goldText}>
+    Total Vendido 💰: ${total}
+  </p>
+
+  <p style={styles.goldText}>
+    Trabajador 35% 👤: ${trabajador}
+  </p>
+
+  <p style={styles.goldText}>
+    Tu 15% 👑: ${tu}
+  </p>
+
+  <p style={styles.goldText}>
+    Socio 50% 🤝: ${socio}
+  </p>
+</div>
 
         {!cerrado && (
           <>
