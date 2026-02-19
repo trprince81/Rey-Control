@@ -9,7 +9,6 @@ export default function Admin() {
     if (cerrado) return;
 
     const confirmar = confirm("¿Estás seguro que quieres agregar este cliente?");
-
     if (!confirmar) return;
 
     setClientes(clientes + 1);
@@ -31,29 +30,29 @@ export default function Admin() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Panel Admin 👑</h1>
+        <h1 style={styles.title}>Imperio S&D 👑</h1>
 
         <div style={styles.stats}>
-  <p style={styles.goldText}>
-    Clientes 👨: {clientes}
-  </p>
+          <p style={styles.goldText}>
+            Clientes 👨: <span style={styles.number}>{clientes}</span>
+          </p>
 
-  <p style={styles.goldText}>
-    Total Vendido 💰: ${total}
-  </p>
+          <p style={styles.goldText}>
+            Total Vendido 💰: <span style={styles.number}>${total}</span>
+          </p>
 
-  <p style={styles.goldText}>
-    Trabajador 35% 👤: ${trabajador}
-  </p>
+          <p style={styles.goldText}>
+            Trabajador 35% 👤: <span style={styles.number}>${trabajador}</span>
+          </p>
 
-  <p style={styles.goldText}>
-    Tu 15% 👑: ${tu}
-  </p>
+          <p style={styles.goldText}>
+            Tu 15% 👑: <span style={styles.number}>${tu}</span>
+          </p>
 
-  <p style={styles.goldText}>
-    Socio 50% 🤝: ${socio}
-  </p>
-</div>
+          <p style={styles.goldText}>
+            Socio 50% 🤝: <span style={styles.number}>${socio}</span>
+          </p>
+        </div>
 
         {!cerrado && (
           <>
@@ -75,7 +74,7 @@ export default function Admin() {
           </>
         )}
 
-        {cerrado && <p style={{ color: "red" }}>Día Cerrado</p>}
+        {cerrado && <p style={{ color: "red", marginTop: "15px" }}>Día Cerrado</p>}
       </div>
     </div>
   );
@@ -103,18 +102,31 @@ const styles = {
   },
 
   title: {
-    fontSize: "24px",
+    fontSize: "28px",
     marginBottom: "20px",
-    background: "linear-gradient(45deg, orange, gold)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
     fontWeight: "bold",
     textAlign: "center",
+    background: "linear-gradient(45deg, #FFD700, #FFB800, #FFA500)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
   },
 
   stats: {
     marginBottom: "20px",
     lineHeight: "1.8",
+  },
+
+  goldText: {
+    fontSize: "18px",
+    fontWeight: "bold",
+    marginBottom: "8px",
+    background: "linear-gradient(45deg, #FFD700, #FFB800, #FFA500)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  },
+
+  number: {
+    fontSize: "20px",
   },
 
   button: {
