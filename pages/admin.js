@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Admin() {
   const [seccion, setSeccion] = useState("dashboard");
   const [ventas, setVentas] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
     cargarVentas();
+    cargarUsuarios();
   }, []);
 
   const cargarVentas = async () => {
@@ -22,6 +24,37 @@ export default function Admin() {
     }
   };
 
+  const cargarUsuarios = async () => {
+    const { data } = await supabase
+      .from("trabajadores")
+      .select("*");
+
+    if (data) {
+      setUsuarios(data);
+    }
+  };
+
+  const crearUsuario = async () => {
+    const nombre = prompt("Nombre del trabajador:");
+    const pin = prompt("PIN del trabajador:");
+
+    if (!nombre || !pin) return;
+
+    await supabase.from("trabajadores").insert([{ nombre, pin }]);
+
+    alert("Trabajador creado 🔥");
+    cargarUsuarios();
+  };
+
+  const eliminarUsuario = async (id) => {
+    if (!confirm("¿Seguro que deseas eliminar este trabajador?")) return;
+
+    await supabase.from("trabajadores").delete().eq("id", id);
+
+    alert("Trabajador eliminado");
+    cargarUsuarios();
+  };
+
   const cerrarSesion = () => {
     window.location.href = "/login";
   };
@@ -33,7 +66,7 @@ export default function Admin() {
   return (
     <div style={styles.container}>
       <div style={styles.sidebar}>
-        <h2 style={{ color: "gold" }}>Imperio S&D</h2>
+        <h2 style={{ color: "gold" }}>Imperio S&D 👑</h2>
 
         <button onClick={() => setSeccion("dashboard")} style={styles.menuBtn}>
           Dashboard
@@ -45,10 +78,6 @@ export default function Admin() {
 
         <button onClick={() => setSeccion("usuarios")} style={styles.menuBtn}>
           Usuarios
-        </button>
-
-        <button onClick={() => setSeccion("ajustes")} style={styles.menuBtn}>
-          Ajustes
         </button>
 
         <button onClick={cerrarSesion} style={styles.logout}>
@@ -69,7 +98,7 @@ export default function Admin() {
 
         {seccion === "ventas" && (
           <>
-            <h1>Historial de Ventas</h1>
+            <h1>Historial de Ventas 💰</h1>
             {ventas.map((venta) => (
               <div key={venta.id} style={styles.card}>
                 <p><strong>{venta.trabajadores?.nombre}</strong></p>
@@ -81,15 +110,25 @@ export default function Admin() {
 
         {seccion === "usuarios" && (
           <>
-            <h1>Gestión de Usuarios</h1>
-            <p>Aquí agregaremos editar / crear / eliminar trabajadores.</p>
-          </>
-        )}
+            <h1>Gestión de Usuarios 👥</h1>
 
-        {seccion === "ajustes" && (
-          <>
-            <h1>Ajustes ⚙</h1>
-            <p>Aquí pondremos modo noche / día / cambiar PIN.</p>
+            <button style={styles.addBtn} onClick={crearUsuario}>
+              ➕ Crear Trabajador
+            </button>
+
+            <div style={{ marginTop: "20px" }}>
+              {usuarios.map((usuario) => (
+                <div key={usuario.id} style={styles.card}>
+                  <p><strong>{usuario.nombre}</strong></p>
+                  <button
+                    style={styles.deleteBtn}
+                    onClick={() => eliminarUsuario(usuario.id)}
+                  >
+                    🗑 Eliminar
+                  </button>
+                </div>
+              ))}
+            </div>
           </>
         )}
       </div>
@@ -139,5 +178,24 @@ const styles = {
     padding: "10px",
     borderRadius: "8px",
     marginTop: "10px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  addBtn: {
+    padding: "10px",
+    background: "gold",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+  deleteBtn: {
+    padding: "5px 10px",
+    background: "red",
+    border: "none",
+    borderRadius: "6px",
+    color: "white",
+    cursor: "pointer",
   },
 };
