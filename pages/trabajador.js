@@ -1,113 +1,67 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { supabase } from "../lib/supabaseClient";
+   <div style={{ padding: 20, background: "#111", minHeight: "100vh", color: "white" }}>
+      <h1>Imperio S&D 👑</h1>
 
-export default function Login() {
-  const router = useRouter();
-  const [nombre, setNombre] = useState("");
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState("");
+      <h2>Crear Trabajador</h2>
 
-  const handleLoginTrabajador = async () => {
-    setError("");
+      <input
+        placeholder="Nombre"
+        value={nombre}
+        onChange={(e) => setNombre(e.target.value)}
+        style={{ marginRight: 10 }}
+      />
 
-    const { data, error } = await supabase
-      .from("trabajadores")
-      .select("*")
-      .eq("nombre", nombre)
-      .eq("pin", pin)
-      .single();
+      <input
+        placeholder="PIN"
+        value={pin}
+        onChange={(e) => setPin(e.target.value)}
+        style={{ marginRight: 10 }}
+      />
 
-    if (error || !data) {
-      setError("Nombre o PIN incorrecto");
-      return;
-    }
+      <button onClick={crearTrabajador}>Crear</button>
 
-    localStorage.setItem("trabajador", JSON.stringify(data));
-    router.push("/trabajador");
-  };
+      <hr style={{ margin: "20px 0" }} />
 
-  const handleLoginAdmin = () => {
-    if (pin === "1234") {
-      router.push("/admin");
-    } else {
-      setError("PIN de admin incorrecto");
-    }
-  };
+      <h2>Lista de Trabajadores</h2>
 
-  return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Imperio S&D 👑</h1>
+      {trabajadores.map((t) => (
+        <div key={t.id} style={{ marginBottom: 10 }}>
+          <strong>{t.nombre}</strong>
 
-        <input
-          style={styles.input}
-          placeholder="Nombre"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
+          <button
+            onClick={() => setSeleccionado(t.id)}
+            style={{ marginLeft: 10 }}
+          >
+            Seleccionar
+          </button>
 
-        <input
-          style={styles.input}
-          placeholder="PIN"
-          type="password"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-        />
+          <button
+            onClick={() => eliminarTrabajador(t.id)}
+            style={{ marginLeft: 10 }}
+          >
+            Eliminar
+          </button>
+        </div>
+      ))}
 
-        {error && <p style={styles.error}>{error}</p>}
+      <hr style={{ margin: "20px 0" }} />
 
-        <button style={styles.button} onClick={handleLoginTrabajador}>
-          Entrar como Trabajador 👤
-        </button>
+      <h2>Ventas</h2>
 
-        <button style={styles.button} onClick={handleLoginAdmin}>
-          Entrar como Admin 👑
-        </button>
-      </div>
+      <button onClick={() => registrarVenta(120)}>15 min - $120</button>
+      <button onClick={() => registrarVenta(180)} style={{ marginLeft: 10 }}>
+        30 min - $180
+      </button>
+      <button onClick={() => registrarVenta(260)} style={{ marginLeft: 10 }}>
+        1 hora - $260
+      </button>
+
+      <hr style={{ margin: "20px 0" }} />
+
+      <h3>Clientes 👤: {clientes}</h3>
+      <h3>Total Vendido 💰: ${total}</h3>
+      <h3>Trabajador 35%: ${trabajadorGanancia}</h3>
+      <h3>Tu 15% 👑: ${tuGanancia}</h3>
+      <h3>Socio 50%: ${socioGanancia}</h3>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "linear-gradient(135deg, #000000, #1a1a1a)"
-  },
-  card: {
-    background: "#111",
-    padding: "40px",
-    borderRadius: "20px",
-    boxShadow: "0 0 40px gold",
-    display: "flex",
-    flexDirection: "column",
-    width: "320px"
-  },
-  title: {
-    color: "gold",
-    textAlign: "center",
-    marginBottom: "20px"
-  },
-  input: {
-    marginBottom: "15px",
-    padding: "10px",
-    borderRadius: "10px",
-    border: "none"
-  },
-  button: {
-    marginTop: "10px",
-    padding: "12px",
-    borderRadius: "12px",
-    border: "none",
-    background: "gold",
-    fontWeight: "bold",
-    cursor: "pointer"
-  },
-  error: {
-    color: "red",
-    textAlign: "center"
-  }
-};
