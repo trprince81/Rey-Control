@@ -1,81 +1,69 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 import { supabase } from "../lib/supabaseClient";
 
-export default function Trabajador() {
-  const [trabajadorId, setTrabajadorId] = useState(null);
-  const [montoPersonalizado, setMontoPersonalizado] = useState("");
-  const [mensaje, setMensaje] = useState("");
+export default function Login() {
+  const router = useRouter();
+  const [nombre, setNombre] = useState("");
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
 
-  // ⚡ IMPORTANTE: aquí debes poner el ID real del trabajador logueado
-  // Por ahora lo dejamos manual (luego lo hacemos automático con login)
-  const ID_TRABAJADOR = localStorage.getItem("trabajador_id");
+  const handleLoginTrabajador = async () => {
+    setError("");
 
-  const registrarVenta = async (monto) => {
-    if (!ID_TRABAJADOR) {
-      alert("No hay trabajador logueado");
+    const { data, error } = await supabase
+      .from("trabajadores")
+      .select("*")
+      .eq("nombre", nombre)
+      .eq("pin", pin)
+      .single();
+
+    if (error || !data) {
+      setError("Nombre o PIN incorrecto");
       return;
     }
 
-    const total_trabajador = monto * 0.35;
-    const total_dueno = monto * 0.15;
-    const total_socio = monto * 0.5;
+    localStorage.setItem("trabajador", JSON.stringify(data));
+    router.push("/trabajador");
+  };
 
-    const { error } = await supabase.from("ventas").insert([
-      {
-        trabajador_id: ID_TRABAJADOR,
-        precio: monto,
-        total_trabajador,
-        total_dueno,
-        total_socio,
-      },
-    ]);
-
-    if (error) {
-      console.log(error);
-      setMensaje("❌ Error guardando venta");
+  const handleLoginAdmin = () => {
+    if (pin === "1234") {
+      router.push("/admin");
     } else {
-      setMensaje("🔥 Venta registrada");
-      new Audio("/pasta.mp3").play().catch(()=>{});
+      setError("PIN de admin incorrecto");
     }
   };
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Panel Trabajador 👑</h1>
+      <div style={styles.card}>
+        <h1 style={styles.title}>Imperio S&D 👑</h1>
 
-      <div style={styles.buttons}>
-        <button style={styles.btn} onClick={() => registrarVenta(120)}>
-          15 Min - 120
+        <input
+          style={styles.input}
+          placeholder="Nombre"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+        />
+
+        <input
+          style={styles.input}
+          placeholder="PIN"
+          type="password"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+        />
+
+        {error && <p style={styles.error}>{error}</p>}
+
+        <button style={styles.button} onClick={handleLoginTrabajador}>
+          Entrar como Trabajador 👤
         </button>
 
-        <button style={styles.btn} onClick={() => registrarVenta(180)}>
-          30 Min - 180
+        <button style={styles.button} onClick={handleLoginAdmin}>
+          Entrar como Admin 👑
         </button>
-
-        <button style={styles.btn} onClick={() => registrarVenta(260)}>
-          1 Hora - 260
-        </button>
-
-        <div style={{ marginTop: 20 }}>
-          <input
-            type="number"
-            placeholder="Monto personalizado"
-            value={montoPersonalizado}
-            onChange={(e) => setMontoPersonalizado(e.target.value)}
-            style={styles.input}
-          />
-
-          <button
-            style={styles.btn}
-            onClick={() =>
-              registrarVenta(parseFloat(montoPersonalizado))
-            }
-          >
-            Registrar Personalizado
-          </button>
-        </div>
-
-        <p style={{ marginTop: 20 }}>{mensaje}</p>
       </div>
     </div>
   );
@@ -83,36 +71,43 @@ export default function Trabajador() {
 
 const styles = {
   container: {
-    minHeight: "100vh",
-    background: "black",
-    color: "gold",
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "linear-gradient(135deg, #000000, #1a1a1a)"
+  },
+  card: {
+    background: "#111",
+    padding: "40px",
+    borderRadius: "20px",
+    boxShadow: "0 0 40px gold",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
+    width: "320px"
   },
   title: {
-    fontSize: "32px",
-    marginBottom: "30px",
-  },
-  buttons: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-  },
-  btn: {
-    padding: "15px",
-    background: "gold",
-    color: "black",
-    border: "none",
-    borderRadius: "10px",
-    fontWeight: "bold",
-    cursor: "pointer",
+    color: "gold",
+    textAlign: "center",
+    marginBottom: "20px"
   },
   input: {
+    marginBottom: "15px",
     padding: "10px",
-    marginBottom: "10px",
-    borderRadius: "8px",
-    border: "none",
+    borderRadius: "10px",
+    border: "none"
   },
+  button: {
+    marginTop: "10px",
+    padding: "12px",
+    borderRadius: "12px",
+    border: "none",
+    background: "gold",
+    fontWeight: "bold",
+    cursor: "pointer"
+  },
+  error: {
+    color: "red",
+    textAlign: "center"
+  }
 };
