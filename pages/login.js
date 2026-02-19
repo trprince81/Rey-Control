@@ -1,12 +1,16 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Login() {
-  const [modo, setModo] = useState(null);
+  const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
 
-  async function loginTrabajador() {
+  const handleLoginTrabajador = async () => {
+    setError("");
+
     const { data, error } = await supabase
       .from("trabajadores")
       .select("*")
@@ -15,115 +19,95 @@ export default function Login() {
       .single();
 
     if (error || !data) {
-      alert("Nombre o PIN incorrecto ❌");
+      setError("Nombre o PIN incorrecto");
       return;
     }
 
-    // 🔥 AQUÍ SE GUARDA EL TRABAJADOR
-    localStorage.setItem("trabajador_id", data.id);
-    localStorage.setItem("trabajador_nombre", data.nombre);
+    localStorage.setItem("trabajador", JSON.stringify(data));
+    router.push("/trabajador");
+  };
 
-    window.location.href = "/trabajador";
-  }
-
-  function loginAdmin() {
+  const handleLoginAdmin = () => {
     if (pin === "1234") {
-      window.location.href = "/admin";
+      router.push("/admin");
     } else {
-      alert("PIN Admin incorrecto ❌");
+      setError("PIN de admin incorrecto");
     }
-  }
+  };
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Imperio S&D 👑</h1>
+      <div style={styles.card}>
+        <h1 style={styles.title}>Imperio S&D 👑</h1>
 
-      {!modo && (
-        <div style={styles.menu}>
-          <button style={styles.btn} onClick={() => setModo("admin")}>
-            👑 Admin
-          </button>
+        <input
+          style={styles.input}
+          placeholder="Nombre"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+        />
 
-          <button style={styles.btn} onClick={() => setModo("trabajador")}>
-            👤 Trabajador
-          </button>
-        </div>
-      )}
+        <input
+          style={styles.input}
+          placeholder="PIN"
+          type="password"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+        />
 
-      {modo && (
-        <div style={styles.box}>
-          {modo === "trabajador" && (
-            <input
-              type="text"
-              placeholder="Nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              style={styles.input}
-            />
-          )}
+        {error && <p style={styles.error}>{error}</p>}
 
-          <input
-            type="password"
-            placeholder="PIN"
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
-            style={styles.input}
-          />
+        <button style={styles.button} onClick={handleLoginTrabajador}>
+          Entrar como Trabajador 👤
+        </button>
 
-          <button
-            style={styles.btn}
-            onClick={modo === "admin" ? loginAdmin : loginTrabajador}
-          >
-            Entrar 🚀
-          </button>
-
-          <button
-            style={{ ...styles.btn, background: "gray" }}
-            onClick={() => setModo(null)}
-          >
-            Volver
-          </button>
-        </div>
-      )}
+        <button style={styles.button} onClick={handleLoginAdmin}>
+          Entrar como Admin 👑
+        </button>
+      </div>
     </div>
   );
 }
 
 const styles = {
   container: {
-    minHeight: "100vh",
-    background: "black",
-    color: "gold",
+    height: "100vh",
     display: "flex",
-    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
+    background: "linear-gradient(135deg, #000000, #1a1a1a)"
   },
-  title: {
-    marginBottom: "40px",
-    fontSize: "32px",
-  },
-  menu: {
-    display: "flex",
-    gap: "20px",
-  },
-  box: {
+  card: {
+    background: "#111",
+    padding: "40px",
+    borderRadius: "20px",
+    boxShadow: "0 0 40px gold",
     display: "flex",
     flexDirection: "column",
-    gap: "15px",
-    width: "250px",
+    width: "320px"
+  },
+  title: {
+    color: "gold",
+    textAlign: "center",
+    marginBottom: "20px"
   },
   input: {
+    marginBottom: "15px",
     padding: "10px",
-    borderRadius: "8px",
-    border: "none",
+    borderRadius: "10px",
+    border: "none"
   },
-  btn: {
+  button: {
+    marginTop: "10px",
     padding: "12px",
-    borderRadius: "8px",
+    borderRadius: "12px",
     border: "none",
     background: "gold",
     fontWeight: "bold",
-    cursor: "pointer",
+    cursor: "pointer"
   },
+  error: {
+    color: "red",
+    textAlign: "center"
+  }
 };
