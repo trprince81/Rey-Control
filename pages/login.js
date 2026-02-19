@@ -1,33 +1,17 @@
 import { useState } from "react";
-import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 
 export default function Login() {
-  const router = useRouter();
-  const [modo, setModo] = useState("admin");
-  const [pinAdmin, setPinAdmin] = useState("");
+  const [modo, setModo] = useState(null);
   const [nombre, setNombre] = useState("");
-  const [pinTrabajador, setPinTrabajador] = useState("");
+  const [pin, setPin] = useState("");
 
-  async function entrarAdmin() {
-    if (pinAdmin === "carolynsd") {
-      router.push("/admin");
-    } else {
-      alert("PIN incorrecto ❌");
-    }
-  }
-
-  async function entrarTrabajador() {
-    if (!nombre || !pinTrabajador) {
-      alert("Completa todos los campos");
-      return;
-    }
-
+  async function loginTrabajador() {
     const { data, error } = await supabase
       .from("trabajadores")
       .select("*")
       .eq("nombre", nombre)
-      .eq("pin", pinTrabajador)
+      .eq("pin", pin)
       .single();
 
     if (error || !data) {
@@ -35,149 +19,163 @@ export default function Login() {
       return;
     }
 
-    localStorage.setItem("trabajador_id", data.id);
-    localStorage.setItem("trabajador_nombre", data.nombre);
+    localStorage.setItem("trabajador", JSON.stringify(data));
+    window.location.href = "/trabajador";
+  }
 
-    router.push("/trabajador");
+  function loginAdmin() {
+    if (pin === "1234") {
+      window.location.href = "/admin";
+    } else {
+      alert("PIN Admin incorrecto ❌");
+    }
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <div style={styles.fondo}>
+      <div style={styles.overlay}></div>
 
-        <h1 style={styles.logo}>IMPERIO S&D 💰</h1>
+      <div style={styles.container}>
+        <h1 style={styles.title}>Imperio S&D 👑</h1>
 
-        <div style={styles.tabs}>
-          <button
-            style={modo === "admin" ? styles.activeTab : styles.tab}
-            onClick={() => setModo("admin")}
-          >
-            👑 Admin
-          </button>
-          <button
-            style={modo === "trabajador" ? styles.activeTab : styles.tab}
-            onClick={() => setModo("trabajador")}
-          >
-            👤 Trabajador
-          </button>
-        </div>
+        {!modo && (
+          <div style={styles.menu}>
+            <div style={styles.circle} onClick={() => setModo("admin")}>
+              👑
+              <span>Admin</span>
+            </div>
 
-        {modo === "admin" && (
-          <>
-            <input
-              type="password"
-              placeholder="PIN Privado"
-              value={pinAdmin}
-              onChange={(e) => setPinAdmin(e.target.value)}
-              style={styles.input}
-            />
-            <button onClick={entrarAdmin} style={styles.button}>
-              Entrar al Imperio 👑
-            </button>
-          </>
+            <div style={styles.circle} onClick={() => setModo("trabajador")}>
+              👤
+              <span>Trabajador</span>
+            </div>
+
+            <div style={styles.circle}>
+              ⚙
+              <span>Config</span>
+            </div>
+          </div>
         )}
 
-        {modo === "trabajador" && (
-          <>
+        {modo && (
+          <div style={styles.loginBox}>
+            {modo === "trabajador" && (
+              <input
+                placeholder="Nombre"
+                style={styles.input}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+              />
+            )}
+
             <input
-              type="text"
-              placeholder="Nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              style={styles.input}
-            />
-            <input
-              type="password"
               placeholder="PIN"
-              value={pinTrabajador}
-              onChange={(e) => setPinTrabajador(e.target.value)}
+              type="password"
               style={styles.input}
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
             />
-            <button onClick={entrarTrabajador} style={styles.button}>
-              Entrar al Sistema 👤
-            </button>
-          </>
-        )}
 
+            <button
+              style={styles.button}
+              onClick={modo === "admin" ? loginAdmin : loginTrabajador}
+            >
+              Entrar 🚀
+            </button>
+
+            <button style={styles.volver} onClick={() => setModo(null)}>
+              Volver
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    minHeight: "100vh",
+  fondo: {
+    backgroundImage: "url('/01.JPG')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    height: "100vh",
+    position: "relative",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "radial-gradient(circle at center, #1a1a1a, #000)",
   },
 
-  card: {
-    width: 380,
-    padding: 40,
-    borderRadius: 25,
-    background: "linear-gradient(145deg, #111, #1e1e1e)",
-    boxShadow: "0 0 60px rgba(255,215,0,0.3)",
+  overlay: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    backdropFilter: "blur(8px)",
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
+
+  container: {
+    position: "relative",
+    zIndex: 2,
     textAlign: "center",
-    animation: "fadeIn 0.8s ease-in-out",
-  },
-
-  logo: {
-    fontSize: 28,
-    fontWeight: "bold",
-    background: "linear-gradient(90deg, gold, #ffcc00, gold)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    marginBottom: 25,
-  },
-
-  tabs: {
-    display: "flex",
-    marginBottom: 25,
-  },
-
-  tab: {
-    flex: 1,
-    padding: 10,
-    margin: 5,
-    borderRadius: 10,
-    border: "1px solid #333",
-    background: "#222",
-    color: "#aaa",
-    cursor: "pointer",
-  },
-
-  activeTab: {
-    flex: 1,
-    padding: 10,
-    margin: 5,
-    borderRadius: 10,
-    border: "1px solid gold",
-    background: "#111",
     color: "gold",
+  },
+
+  title: {
+    fontSize: "42px",
+    marginBottom: "50px",
+    textShadow: "0 0 20px gold, 0 0 40px orange",
+  },
+
+  menu: {
+    display: "flex",
+    gap: "40px",
+  },
+
+  circle: {
+    width: "120px",
+    height: "120px",
+    borderRadius: "50%",
+    background: "linear-gradient(145deg, #FFD700, #FFA500)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: "28px",
+    fontWeight: "bold",
     cursor: "pointer",
+    boxShadow: "0 0 20px gold",
+    transition: "0.3s",
+  },
+
+  loginBox: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    width: "260px",
+    margin: "auto",
   },
 
   input: {
-    width: "100%",
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 12,
+    padding: "12px",
+    borderRadius: "10px",
     border: "none",
-    background: "#222",
-    color: "white",
-    fontSize: 14,
+    fontSize: "16px",
   },
 
   button: {
-    width: "100%",
-    padding: 14,
-    borderRadius: 15,
+    padding: "12px",
+    borderRadius: "10px",
     border: "none",
-    background: "linear-gradient(90deg, gold, #ffcc00)",
+    background: "linear-gradient(45deg, gold, orange)",
     fontWeight: "bold",
     cursor: "pointer",
-    transition: "0.3s",
+    boxShadow: "0 0 15px gold",
+  },
+
+  volver: {
+    background: "transparent",
+    color: "white",
+    border: "none",
+    cursor: "pointer",
   },
 };
