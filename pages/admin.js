@@ -1,67 +1,89 @@
-   <div style={{ padding: 20, background: "#111", minHeight: "100vh", color: "white" }}>
-      <h1>Imperio S&D 👑</h1>
+import { useEffect, useState } from "react";
 
-      <h2>Crear Trabajador</h2>
+export default function Admin() {
+  const [ventas, setVentas] = useState([]);
+  const [totalGeneral, setTotalGeneral] = useState(0);
 
-      <input
-        placeholder="Nombre"
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        style={{ marginRight: 10 }}
-      />
+  useEffect(() => {
+    const data = JSON.parse(localStorage.getItem("ventas")) || [];
+    setVentas(data);
 
-      <input
-        placeholder="PIN"
-        value={pin}
-        onChange={(e) => setPin(e.target.value)}
-        style={{ marginRight: 10 }}
-      />
+    const total = data.reduce((acc, venta) => acc + venta.monto, 0);
+    setTotalGeneral(total);
+  }, []);
 
-      <button onClick={crearTrabajador}>Crear</button>
+  const trabajador35 = totalGeneral * 0.35;
+  const tu15 = totalGeneral * 0.15;
+  const socio50 = totalGeneral * 0.5;
 
-      <hr style={{ margin: "20px 0" }} />
+  return (
+    <div style={styles.fondo}>
+      <div style={styles.card}>
+        <h2 style={styles.titulo}>Panel Admin 👑</h2>
 
-      <h2>Lista de Trabajadores</h2>
+        <h1 style={styles.total}>${totalGeneral}</h1>
+        <p>Total General Generado</p>
 
-      {trabajadores.map((t) => (
-        <div key={t.id} style={{ marginBottom: 10 }}>
-          <strong>{t.nombre}</strong>
-
-          <button
-            onClick={() => setSeleccionado(t.id)}
-            style={{ marginLeft: 10 }}
-          >
-            Seleccionar
-          </button>
-
-          <button
-            onClick={() => eliminarTrabajador(t.id)}
-            style={{ marginLeft: 10 }}
-          >
-            Eliminar
-          </button>
+        <div style={styles.resumen}>
+          <h3>Trabajadores 35%: ${trabajador35}</h3>
+          <h3>Tu 15% 👑: ${tu15}</h3>
+          <h3>Socio 50%: ${socio50}</h3>
         </div>
-      ))}
 
-      <hr style={{ margin: "20px 0" }} />
-
-      <h2>Ventas</h2>
-
-      <button onClick={() => registrarVenta(120)}>15 min - $120</button>
-      <button onClick={() => registrarVenta(180)} style={{ marginLeft: 10 }}>
-        30 min - $180
-      </button>
-      <button onClick={() => registrarVenta(260)} style={{ marginLeft: 10 }}>
-        1 hora - $260
-      </button>
-
-      <hr style={{ margin: "20px 0" }} />
-
-      <h3>Clientes 👤: {clientes}</h3>
-      <h3>Total Vendido 💰: ${total}</h3>
-      <h3>Trabajador 35%: ${trabajadorGanancia}</h3>
-      <h3>Tu 15% 👑: ${tuGanancia}</h3>
-      <h3>Socio 50%: ${socioGanancia}</h3>
+        <div style={styles.lista}>
+          <h3>Historial de Ventas</h3>
+          {ventas.map((venta, index) => (
+            <div key={index} style={styles.item}>
+              <p><strong>{venta.trabajador}</strong></p>
+              <p>${venta.monto}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  fondo: {
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #141e30, #243b55)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  card: {
+    background: "#111",
+    padding: "40px",
+    borderRadius: "20px",
+    boxShadow: "0 0 40px gold",
+    color: "white",
+    width: "500px",
+  },
+  titulo: {
+    color: "gold",
+    textAlign: "center",
+  },
+  total: {
+    fontSize: "50px",
+    textAlign: "center",
+    color: "gold",
+  },
+  resumen: {
+    background: "#222",
+    padding: "15px",
+    borderRadius: "15px",
+    marginTop: "20px",
+  },
+  lista: {
+    marginTop: "20px",
+  },
+  item: {
+    background: "#1a1a1a",
+    padding: "10px",
+    borderRadius: "10px",
+    marginTop: "10px",
+    display: "flex",
+    justifyContent: "space-between",
+  },
+};
