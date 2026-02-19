@@ -5,7 +5,7 @@ export default function Login() {
   const router = useRouter();
   const [pin, setPin] = useState("");
 
-  const ADMIN_PIN = "1234";
+  const ADMIN_PIN = "caro13";
 
   function handleLogin(role) {
     if (role === "admin") {
