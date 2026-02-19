@@ -1,9 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Admin() {
   const [clientes, setClientes] = useState(0);
   const [total, setTotal] = useState(0);
   const [cerrado, setCerrado] = useState(false);
+
+  const [displayTotal, setDisplayTotal] = useState(0);
+  const [displayClientes, setDisplayClientes] = useState(0);
+
+  function hablar(texto) {
+    const mensaje = new SpeechSynthesisUtterance(texto);
+    mensaje.lang = "es-DO";
+    mensaje.rate = 0.9;
+    mensaje.pitch = 1;
+    mensaje.volume = 1;
+    window.speechSynthesis.speak(mensaje);
+  }
 
   function registrarVenta(precio) {
     if (cerrado) return;
@@ -11,26 +23,65 @@ export default function Admin() {
     const confirmar = confirm("¿Estás seguro que quieres agregar este cliente?");
     if (!confirmar) return;
 
-    setClientes(clientes + 1);
-    setTotal(total + precio);
+    setClientes(prev => prev + 1);
+    setTotal(prev => prev + precio);
+
+    hablar("Ta heavy mi rey, estás haciendo pasta mijo");
   }
 
   const trabajador = total * 0.35;
   const tu = total * 0.15;
   const socio = total * 0.5;
 
+  // 🔥 Animación Clientes
+  useEffect(() => {
+    let start = displayClientes;
+    let end = clientes;
+    if (start === end) return;
+
+    let increment = end > start ? 1 : -1;
+
+    const timer = setInterval(() => {
+      start += increment;
+      setDisplayClientes(start);
+      if (start === end) clearInterval(timer);
+    }, 40);
+
+    return () => clearInterval(timer);
+  }, [clientes]);
+
+  // 🔥 Animación Total
+  useEffect(() => {
+    let start = displayTotal;
+    let end = total;
+    if (start === end) return;
+
+    let increment = (end - start) / 20;
+
+    const timer = setInterval(() => {
+      start += increment;
+      if ((increment > 0 && start >= end) || (increment < 0 && start <= end)) {
+        start = end;
+        clearInterval(timer);
+      }
+      setDisplayTotal(Math.floor(start));
+    }, 30);
+
+    return () => clearInterval(timer);
+  }, [total]);
+
   function cerrarDia() {
     const confirmar = confirm("¿Seguro que deseas cerrar el día?");
     if (!confirmar) return;
 
     setCerrado(true);
-    alert("Día cerrado correctamente 🔒");
+    hablar("Día cerrado mi rey, conteo final listo");
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        
+
         <button
           style={styles.backButton}
           onClick={() => (window.location.href = "/login")}
@@ -42,38 +93,23 @@ export default function Admin() {
 
         <div style={styles.stats}>
           <p style={styles.line}>
-            <span style={styles.goldText}>Clientes</span>
-            <span style={styles.emoji}> 👨 </span>
-            <span style={styles.goldText}>: </span>
-            <span style={styles.number}>{clientes}</span>
+            Clientes 👨 : <span style={styles.number}>{displayClientes}</span>
           </p>
 
           <p style={styles.line}>
-            <span style={styles.goldText}>Total Vendido</span>
-            <span style={styles.emoji}> 💰 </span>
-            <span style={styles.goldText}>: </span>
-            <span style={styles.number}>${total}</span>
+            Total Vendido 💰 : <span style={styles.number}>${displayTotal}</span>
           </p>
 
           <p style={styles.line}>
-            <span style={styles.goldText}>Trabajador 35%</span>
-            <span style={styles.emoji}> 👤 </span>
-            <span style={styles.goldText}>: </span>
-            <span style={styles.number}>${trabajador}</span>
+            Trabajador 35% 👤 : <span style={styles.number}>${Math.floor(trabajador)}</span>
           </p>
 
           <p style={styles.line}>
-            <span style={styles.goldText}>Tu 15%</span>
-            <span style={styles.emoji}> 👑 </span>
-            <span style={styles.goldText}>: </span>
-            <span style={styles.number}>${tu}</span>
+            Tu 15% 👑 : <span style={styles.number}>${Math.floor(tu)}</span>
           </p>
 
           <p style={styles.line}>
-            <span style={styles.goldText}>Socio 50%</span>
-            <span style={styles.emoji}> 🤝 </span>
-            <span style={styles.goldText}>: </span>
-            <span style={styles.number}>${socio}</span>
+            Socio 50% 🤝 : <span style={styles.number}>${Math.floor(socio)}</span>
           </p>
         </div>
 
@@ -157,20 +193,11 @@ const styles = {
     fontSize: "18px",
     fontWeight: "bold",
     marginBottom: "10px",
-  },
-
-  goldText: {
-    background: "linear-gradient(45deg, #FFD700, #FFB800, #FFA500)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  },
-
-  emoji: {
-    fontSize: "18px",
+    color: "#FFD700",
   },
 
   number: {
-    fontSize: "20px",
+    fontSize: "22px",
     color: "#FFD700",
   },
 
