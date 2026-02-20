@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Imperio S&D",
-  description: "Sistema",
+  description: "Sistema de gestión",
 };
 
 export default function RootLayout({ children }) {
