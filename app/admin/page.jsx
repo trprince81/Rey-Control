@@ -8,13 +8,12 @@ export default function AdminPage() {
   const router = useRouter();
 
   const [user, setUser] = useState(null);
-  const [ventas, setVentas] = useState([]);
+  const [clientes, setClientes] = useState([]);
   const [trabajadores, setTrabajadores] = useState([]);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevoPin, setNuevoPin] = useState("");
-
   const [nuevoPinAdmin, setNuevoPinAdmin] = useState("");
 
   useEffect(() => {
@@ -31,13 +30,13 @@ export default function AdminPage() {
     }
 
     setUser(parsedUser);
-    fetchVentas();
+    fetchClientes();
     fetchTrabajadores();
   }, []);
 
-  const fetchVentas = async () => {
+  const fetchClientes = async () => {
     const { data } = await supabase.from("ventas").select("*");
-    if (data) setVentas(data);
+    if (data) setClientes(data);
   };
 
   const fetchTrabajadores = async () => {
@@ -45,10 +44,10 @@ export default function AdminPage() {
     if (data) setTrabajadores(data);
   };
 
-  const eliminarVenta = async (id) => {
-    if (!confirm("¿Eliminar venta?")) return;
+  const eliminarCliente = async (id) => {
+    if (!confirm("¿Eliminar cliente?")) return;
     await supabase.from("ventas").delete().eq("id", id);
-    fetchVentas();
+    fetchClientes();
   };
 
   const eliminarTrabajador = async (id) => {
@@ -84,19 +83,19 @@ export default function AdminPage() {
     setNuevoPinAdmin("");
   };
 
-  const totalIngresos = ventas.reduce(
-    (acc, v) => acc + Number(v.precio),
+  const totalIngresos = clientes.reduce(
+    (acc, c) => acc + Number(c.precio),
     0
   );
 
   if (!user) return null;
 
-  const getBackgroundImage = () => {
+  const getBackground = () => {
     switch (activeTab) {
       case "dashboard":
         return "/bg-dashboard.jpg";
-      case "ventas":
-        return "/bg-ventas.jpg";
+      case "clientes":
+        return "/bg-clientes.jpg";
       case "usuarios":
         return "/bg-usuarios.jpg";
       case "config":
@@ -109,9 +108,10 @@ export default function AdminPage() {
   return (
     <div
       style={{
+        position: "relative",
         display: "flex",
         minHeight: "100vh",
-        backgroundImage: `url(${getBackgroundImage()})`,
+        backgroundImage: `url(${getBackground()})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -119,7 +119,7 @@ export default function AdminPage() {
         fontFamily: "Segoe UI, sans-serif",
       }}
     >
-      {/* Overlay oscuro */}
+      {/* Overlay */}
       <div
         style={{
           position: "absolute",
@@ -129,7 +129,6 @@ export default function AdminPage() {
         }}
       />
 
-      {/* Contenido encima */}
       <div style={{ display: "flex", width: "100%", position: "relative", zIndex: 1 }}>
 
         {/* Sidebar */}
@@ -137,7 +136,7 @@ export default function AdminPage() {
           <h2 style={{ color: "#d4af37" }}>Imperio S&D 👑</h2>
 
           <div style={menuItem(activeTab === "dashboard")} onClick={() => setActiveTab("dashboard")}>Dashboard</div>
-          <div style={menuItem(activeTab === "ventas")} onClick={() => setActiveTab("ventas")}>Ventas</div>
+          <div style={menuItem(activeTab === "clientes")} onClick={() => setActiveTab("clientes")}>Clientes</div>
           <div style={menuItem(activeTab === "usuarios")} onClick={() => setActiveTab("usuarios")}>Usuarios</div>
           <div style={menuItem(activeTab === "config")} onClick={() => setActiveTab("config")}>Configuración</div>
 
@@ -161,30 +160,63 @@ export default function AdminPage() {
         </div>
 
         {/* Main */}
-        <div style={{ flex: 1, padding: 50 }}>
+        <div style={{ flex: 1, padding: 60 }}>
 
-          <h1 style={{ color: "#d4af37" }}>
-            BIENVENIDO {user.nombre.toUpperCase()}
-          </h1>
+          {/* PERFIL PS5 */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            marginBottom: 40,
+            padding: 20,
+            background: "rgba(0,0,0,0.6)",
+            borderRadius: 15
+          }}>
+            <div style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg,#d4af37,#8b7500)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 30,
+              fontWeight: "bold",
+              color: "#000"
+            }}>
+              {user.nombre.charAt(0).toUpperCase()}
+            </div>
 
+            <div>
+              <p style={{ margin: 0, color: "#aaa" }}>BIENVENIDO</p>
+              <h1 style={{ margin: 0, color: "#d4af37" }}>
+                {user.nombre.toUpperCase()}
+              </h1>
+            </div>
+          </div>
+
+          {/* DASHBOARD */}
           {activeTab === "dashboard" && (
             <div style={{ display: "flex", gap: 20 }}>
-              <Card title="Ventas" value={ventas.length} />
+              <Card title="Clientes" value={clientes.length} />
               <Card title="Ingresos" value={`$${totalIngresos}`} />
               <Card title="Trabajadores" value={trabajadores.length} />
             </div>
           )}
 
-          {activeTab === "ventas" &&
-            ventas.map((v) => (
-              <Line key={v.id}>
-                ${v.precio}
-                <DeleteBtn onClick={() => eliminarVenta(v.id)} />
+          {/* CLIENTES */}
+          {activeTab === "clientes" &&
+            clientes.map((c) => (
+              <Line key={c.id}>
+                ${c.precio}
+                <DeleteBtn onClick={() => eliminarCliente(c.id)} />
               </Line>
             ))}
 
+          {/* USUARIOS */}
           {activeTab === "usuarios" && (
             <>
+              <h3>Agregar Trabajador</h3>
               <input placeholder="Nombre" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
               <input placeholder="PIN" value={nuevoPin} onChange={(e) => setNuevoPin(e.target.value)} />
               <button onClick={agregarTrabajador}>Agregar</button>
@@ -198,8 +230,10 @@ export default function AdminPage() {
             </>
           )}
 
+          {/* CONFIG */}
           {activeTab === "config" && (
             <>
+              <h3>Cambiar mi PIN</h3>
               <input
                 placeholder="Nuevo PIN"
                 value={nuevoPinAdmin}
@@ -208,11 +242,14 @@ export default function AdminPage() {
               <button onClick={cambiarPinAdmin}>Actualizar PIN</button>
             </>
           )}
+
         </div>
       </div>
     </div>
   );
 }
+
+/* ESTILOS */
 
 const menuItem = (active) => ({
   marginBottom: 15,
