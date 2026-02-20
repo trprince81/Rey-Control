@@ -35,9 +35,24 @@ export default function AdminPage() {
     fetchTrabajadores();
   }, []);
 
+  // 🔥 MEJORADO PARA TRAER EL NOMBRE DEL TRABAJADOR
   const fetchClientes = async () => {
-    const { data } = await supabase.from("ventas").select("*");
-    if (data) setClientes(data);
+    const { data, error } = await supabase
+      .from("ventas")
+      .select(`
+        id,
+        precio,
+        estado,
+        created_at,
+        trabajadores (
+          nombre
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setClientes(data);
+    }
   };
 
   const fetchTrabajadores = async () => {
@@ -84,10 +99,9 @@ export default function AdminPage() {
     setNuevoPinAdmin("");
   };
 
-  const totalIngresos = clientes.reduce(
-    (acc, c) => acc + Number(c.precio),
-    0
-  );
+  const totalIngresos = clientes
+    .filter((c) => c.estado === "pagado")
+    .reduce((acc, c) => acc + Number(c.precio), 0);
 
   if (!user) return null;
 
@@ -171,7 +185,7 @@ export default function AdminPage() {
       {/* MAIN */}
       <div style={{ flex: 1, padding: 60 }}>
 
-        {/* PERFIL ESTILO PS5 */}
+        {/* PERFIL */}
         <div
           style={{
             display: "flex",
@@ -212,7 +226,7 @@ export default function AdminPage() {
         {activeTab === "dashboard" && (
           <div style={{ display: "flex", gap: 20 }}>
             <Card title="Clientes" value={clientes.length} />
-            <Card title="Ingresos" value={`$${totalIngresos}`} />
+            <Card title="Ingresos (Pagados)" value={`$${totalIngresos}`} />
             <Card title="Trabajadores" value={trabajadores.length} />
           </div>
         )}
@@ -221,7 +235,17 @@ export default function AdminPage() {
         {activeTab === "clientes" &&
           clientes.map((c) => (
             <Line key={c.id}>
-              ${c.precio}
+              <div>
+                <p style={{ margin: 0 }}>
+                  Trabajador: {c.trabajadores?.nombre || "Sin nombre"}
+                </p>
+                <p style={{ margin: 0 }}>
+                  Monto: ${c.precio}
+                </p>
+                <p style={{ margin: 0 }}>
+                  Estado: {c.estado || "pendiente"}
+                </p>
+              </div>
               <DeleteBtn onClick={() => eliminarCliente(c.id)} />
             </Line>
           ))}
@@ -260,10 +284,9 @@ export default function AdminPage() {
           </>
         )}
 
-        {/* CONFIGURACIÓN COMPLETA */}
+        {/* CONFIG */}
         {activeTab === "config" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
-
             <div
               style={{
                 background: "rgba(0,0,0,0.6)",
@@ -297,10 +320,8 @@ export default function AdminPage() {
                 Actualizar PIN
               </button>
             </div>
-
           </div>
         )}
-
       </div>
     </div>
   );
