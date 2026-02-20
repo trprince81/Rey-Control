@@ -1,1 +1,39 @@
+"use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function AdminPage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser) {
+      router.push("/login");
+      return;
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+
+    if (parsedUser.role !== "admin") {
+      router.push("/login");
+      return;
+    }
+
+    setUser(parsedUser);
+  }, []);
+
+  if (!user) return null;
+
+  return (
+    <div className="min-h-screen bg-black text-white p-10">
+      <h1 className="text-3xl font-bold text-yellow-400 mb-6">
+        Panel Admin 👑
+      </h1>
+
+      <p>Bienvenido, {user.nombre}</p>
+    </div>
+  );
+}
