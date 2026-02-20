@@ -89,7 +89,6 @@ export default function AdminPage() {
     0
   );
 
-  const totalTrabajador = totalIngresos * 0.35;
   const totalDueno = totalIngresos * 0.15;
   const totalSocio = totalIngresos * 0.5;
 
@@ -108,7 +107,6 @@ export default function AdminPage() {
         padding: 40,
       }}
     >
-      {/* HEADER */}
       <div style={{ marginBottom: 30 }}>
         <h1 style={{ color: "#d4af37" }}>Imperio S&D 👑</h1>
 
@@ -142,10 +140,73 @@ export default function AdminPage() {
       {activeTab === "dashboard" && (
         <>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            <CardBig title="Ingresos Totales" value={`$${totalIngresos.toFixed(2)}`} />
-            <CardSmall title="Dueño (15%)" value={`$${totalDueno.toFixed(2)}`} />
-            <CardSmall title="Socio (50%)" value={`$${totalSocio.toFixed(2)}`} />
+            <CardBig
+              title="Ingresos Totales"
+              value={`$${totalIngresos.toFixed(2)}`}
+            />
+            <CardSmall
+              title="Dueño (15%)"
+              value={`$${totalDueno.toFixed(2)}`}
+            />
+            <CardSmall
+              title="Socio (50%)"
+              value={`$${totalSocio.toFixed(2)}`}
+            />
           </div>
+
+          <h2 style={{ marginTop: 50, color: "#d4af37" }}>
+            Totales de los Trabajadores
+          </h2>
+
+          <div style={{ display: "flex", gap: 30, flexWrap: "wrap", marginTop: 20 }}>
+            {trabajadores.map((t) => {
+              const totalIndividual = clientes
+                .filter((c) => c.trabajador_id === t.id)
+                .reduce((acc, c) => acc + Number(c.precio) * 0.35, 0);
+
+              return (
+                <div key={t.id} style={{ textAlign: "center" }}>
+                  <div
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(135deg,#8000ff,#d4af37)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: 18,
+                      boxShadow: "0 0 25px #8000ff",
+                    }}
+                  >
+                    ${totalIndividual.toFixed(2)}
+                  </div>
+                  <p style={{ marginTop: 10 }}>{t.nombre}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <h2 style={{ marginTop: 60, color: "#d4af37" }}>
+            Últimos Clientes
+          </h2>
+
+          {clientes.slice(0, 5).map((c) => (
+            <div
+              key={c.id}
+              style={{
+                background: "rgba(0,0,0,0.6)",
+                padding: 15,
+                borderRadius: 10,
+                marginTop: 10,
+                border: "1px solid #8000ff",
+              }}
+            >
+              ${c.precio} - {c.estado}
+            </div>
+          ))}
         </>
       )}
 
