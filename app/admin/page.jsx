@@ -16,10 +16,10 @@ export default function AdminPage() {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) return router.push("/login");
 
-    const parsedUser = JSON.parse(storedUser);
-    if (parsedUser.role !== "admin") return router.push("/login");
+    const parsed = JSON.parse(storedUser);
+    if (parsed.role !== "admin") return router.push("/login");
 
-    setUser(parsedUser);
+    setUser(parsed);
     fetchClientes();
     fetchTrabajadores();
   }, []);
@@ -27,7 +27,7 @@ export default function AdminPage() {
   const fetchClientes = async () => {
     const { data } = await supabase
       .from("ventas")
-      .select(`*, trabajadores ( nombre )`)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (data) setClientes(data);
@@ -42,243 +42,182 @@ export default function AdminPage() {
     if (data) setTrabajadores(data);
   };
 
-  const eliminarCliente = async (id) => {
-    if (!confirm("¿Eliminar cliente?")) return;
-    await supabase.from("ventas").delete().eq("id", id);
-    fetchClientes();
-  };
+  // 🔥 TOTAL GENERAL
+  const totalIngresos = clientes.reduce(
+    (acc, c) => acc + Number(c.precio),
+    0
+  );
 
-  const cambiarEstado = async (cliente) => {
-    const precio = Number(cliente.precio);
-
-    const total_trabajador = precio * 0.35;
-    const total_dueno = precio * 0.15;
-    const total_socio = precio * 0.5;
-
-    await supabase
-      .from("ventas")
-      .update({
-        estado: "pagado",
-        total_trabajador,
-        total_dueno,
-        total_socio,
-      })
-      .eq("id", cliente.id);
-
-    fetchClientes();
-  };
-
-  const totalIngresos = clientes
-    .filter((c) => c.estado === "pagado")
-    .reduce((acc, c) => acc + Number(c.precio), 0);
-
-  const totalDueno = clientes
-    .filter((c) => c.estado === "pagado")
-    .reduce((acc, c) => acc + Number(c.total_dueno || 0), 0);
-
-  const totalSocio = clientes
-    .filter((c) => c.estado === "pagado")
-    .reduce((acc, c) => acc + Number(c.total_socio || 0), 0);
-
-  const totalTrabajador = (id) =>
-    clientes
-      .filter(
-        (c) => c.estado === "pagado" && c.trabajador_id === id
-      )
-      .reduce((acc, c) => acc + Number(c.total_trabajador || 0), 0);
+  // 🔥 DIVISIÓN REAL
+  const totalTrabajador = totalIngresos * 0.35;
+  const totalDueno = totalIngresos * 0.15;
+  const totalSocio = totalIngresos * 0.5;
 
   if (!user) return null;
 
   return (
     <div
       style={{
-        display: "flex",
         minHeight: "100vh",
         backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('/bg-dashboard.jpg')",
+          "linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('/01.JPG')",
         backgroundSize: "cover",
         color: "white",
-        fontFamily: "Segoe UI, sans-serif",
+        fontFamily: "Segoe UI",
+        padding: 40,
       }}
     >
-      {/* SIDEBAR */}
-      <div
-        style={{
-          width: 260,
-          padding: 40,
-          background: "rgba(0,0,0,0.9)",
-        }}
-      >
-        <h2 style={{ color: "#d4af37" }}>Imperio S&D 👑</h2>
-
-        <div style={menu(activeTab === "dashboard")} onClick={() => setActiveTab("dashboard")}>Dashboard</div>
-        <div style={menu(activeTab === "clientes")} onClick={() => setActiveTab("clientes")}>Clientes</div>
-        <div style={menu(activeTab === "config")} onClick={() => setActiveTab("config")}>Configuración</div>
-
+      {/* HEADER */}
+      <div style={{ marginBottom: 40 }}>
+        <h1 style={{ color: "#d4af37" }}>
+          Imperio S&D 👑
+        </h1>
         <button
           onClick={() => {
             localStorage.removeItem("user");
             router.push("/login");
           }}
           style={{
-            marginTop: 30,
-            background: "#800020",
+            background: "#ff004c",
             border: "none",
-            padding: 12,
-            width: "100%",
+            padding: "8px 14px",
             color: "white",
-            cursor: "pointer",
             borderRadius: 6,
+            cursor: "pointer",
           }}
         >
           Cerrar sesión
         </button>
       </div>
 
-      {/* MAIN */}
-      <div style={{ flex: 1, padding: 60 }}>
+      {/* DASHBOARD */}
+      {activeTab === "dashboard" && (
+        <>
+          {/* CARDS PRINCIPALES */}
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <CardBig
+              title="Ingresos Totales"
+              value={`$${totalIngresos.toFixed(2)}`}
+            />
 
-        <div style={cardBig}>
-          <div style={avatar}>{user.nombre.charAt(0)}</div>
-          <div>
-            <p style={{ margin: 0, color: "#aaa" }}>BIENVENIDO</p>
-            <h1 style={{ margin: 0, color: "#d4af37" }}>
-              {user.nombre.toUpperCase()}
-            </h1>
+            <CardSmall
+              title="Dueño (15%)"
+              value={`$${totalDueno.toFixed(2)}`}
+            />
+
+            <CardSmall
+              title="Socio (50%)"
+              value={`$${totalSocio.toFixed(2)}`}
+            />
           </div>
-        </div>
 
-        {activeTab === "dashboard" && (
-          <>
-            <div style={{ display: "flex", gap: 20 }}>
-              <Card title="Ingresos Totales" value={`$${totalIngresos}`} />
-              <Card title="Dueño (15%)" value={`$${totalDueno}`} />
-              <Card title="Socio (50%)" value={`$${totalSocio}`} />
-            </div>
+          {/* TOTALES POR TRABAJADOR */}
+          <h2 style={{ marginTop: 50, color: "#d4af37" }}>
+            Totales de los Trabajadores
+          </h2>
 
-            <div style={{ marginTop: 40 }}>
-              <h3 style={{ color: "#d4af37" }}>Últimos Clientes</h3>
-              {clientes.slice(0, 5).map((c) => (
-                <Line key={c.id}>
-                  {c.trabajadores?.nombre} — ${c.precio} — {c.estado}
-                </Line>
-              ))}
-            </div>
-          </>
-        )}
+          <div
+            style={{
+              display: "flex",
+              gap: 30,
+              flexWrap: "wrap",
+              marginTop: 20,
+            }}
+          >
+            {trabajadores.map((t) => {
+              const totalIndividual = clientes
+                .filter((c) => c.trabajador_id === t.id)
+                .reduce(
+                  (acc, c) => acc + Number(c.precio) * 0.35,
+                  0
+                );
 
-        {activeTab === "clientes" &&
-          clientes.map((c) => (
-            <Line key={c.id}>
-              <div>
-                <p>Trabajador: {c.trabajadores?.nombre}</p>
-                <p>Monto: ${c.precio}</p>
-                <p>Estado: {c.estado}</p>
-
-                {c.estado !== "pagado" && (
-                  <button
-                    onClick={() => cambiarEstado(c)}
-                    style={greenBtn}
+              return (
+                <div
+                  key={t.id}
+                  style={{ textAlign: "center" }}
+                >
+                  <div
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(135deg,#8000ff,#d4af37)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: 18,
+                      boxShadow: "0 0 25px #8000ff",
+                    }}
                   >
-                    Marcar como Pagado
-                  </button>
-                )}
-              </div>
-              <DeleteBtn onClick={() => eliminarCliente(c.id)} />
-            </Line>
+                    ${totalIndividual.toFixed(2)}
+                  </div>
+                  <p style={{ marginTop: 10 }}>
+                    {t.nombre}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ÚLTIMOS CLIENTES */}
+          <h2 style={{ marginTop: 60, color: "#d4af37" }}>
+            Últimos Clientes
+          </h2>
+
+          {clientes.slice(0, 5).map((c) => (
+            <div
+              key={c.id}
+              style={{
+                background: "rgba(0,0,0,0.6)",
+                padding: 15,
+                borderRadius: 10,
+                marginTop: 10,
+                border: "1px solid #8000ff",
+              }}
+            >
+              ${c.precio} - {c.estado}
+            </div>
           ))}
-
-        {activeTab === "config" && (
-          <>
-            <h2 style={{ color: "#d4af37" }}>Ganancias Trabajadores (35%)</h2>
-
-            {trabajadores.map((t) => (
-              <Line key={t.id}>
-                {t.nombre} — ${totalTrabajador(t.id)}
-              </Line>
-            ))}
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }
 
-/* ESTILOS */
+/* COMPONENTES */
 
-const menu = (active) => ({
-  marginBottom: 18,
-  cursor: "pointer",
-  color: active ? "#d4af37" : "#aaa",
-  fontWeight: active ? "bold" : "normal",
-});
-
-const cardBig = {
-  display: "flex",
-  alignItems: "center",
-  gap: 20,
-  marginBottom: 40,
-  padding: 25,
-  background: "rgba(0,0,0,0.6)",
-  borderRadius: 15,
-};
-
-const avatar = {
-  width: 80,
-  height: 80,
-  borderRadius: "50%",
-  background: "linear-gradient(135deg,#d4af37,#8b7500)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 30,
-  fontWeight: "bold",
-  color: "#000",
-};
-
-const Card = ({ title, value }) => (
-  <div style={{
-    background: "rgba(0,0,0,0.6)",
-    padding: 25,
-    borderRadius: 12,
-    minWidth: 220
-  }}>
+const CardBig = ({ title, value }) => (
+  <div
+    style={{
+      background:
+        "linear-gradient(90deg,#ffd700,#ffae00)",
+      padding: 25,
+      borderRadius: 15,
+      minWidth: 260,
+      color: "black",
+      fontWeight: "bold",
+    }}
+  >
     <h3>{title}</h3>
-    <h1 style={{ color: "#d4af37" }}>{value}</h1>
+    <h1>{value}</h1>
   </div>
 );
 
-const Line = ({ children }) => (
-  <div style={{
-    marginTop: 12,
-    padding: 15,
-    background: "rgba(0,0,0,0.6)",
-    borderRadius: 8
-  }}>
-    {children}
+const CardSmall = ({ title, value }) => (
+  <div
+    style={{
+      background: "rgba(0,0,0,0.6)",
+      padding: 15,
+      borderRadius: 10,
+      minWidth: 180,
+    }}
+  >
+    <h4>{title}</h4>
+    <h2 style={{ color: "#d4af37" }}>
+      {value}
+    </h2>
   </div>
 );
-
-const DeleteBtn = ({ onClick }) => (
-  <button onClick={onClick} style={{
-    marginTop: 8,
-    background: "#8b0000",
-    border: "none",
-    padding: 6,
-    color: "white",
-    borderRadius: 4,
-    cursor: "pointer"
-  }}>
-    Eliminar
-  </button>
-);
-
-const greenBtn = {
-  marginTop: 6,
-  background: "#00c853",
-  border: "none",
-  padding: 6,
-  borderRadius: 4,
-  cursor: "pointer",
-  fontWeight: "bold",
-};
