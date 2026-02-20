@@ -28,11 +28,8 @@ export default function AdminPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-3xl font-bold text-yellow-400 mb-6">
-        Panel Admin 👑
-      </h1>
-
+    <div style={{ minHeight: "100vh", background: "black", color: "white", padding: 40 }}>
+      <h1 style={{ color: "yellow" }}>Panel Admin 👑</h1>
       <p>Bienvenido, {user.nombre}</p>
     </div>
   );
