@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabaseClient";
 
 export default function AdminPage() {
   const router = useRouter();
+
   const [user, setUser] = useState(null);
   const [ventas, setVentas] = useState([]);
   const [trabajadores, setTrabajadores] = useState([]);
@@ -14,16 +15,19 @@ export default function AdminPage() {
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevoPin, setNuevoPin] = useState("");
 
+  const [nuevoPinAdmin, setNuevoPinAdmin] = useState("");
+
+  const [modoClaro, setModoClaro] = useState(false);
+  const [colorTema, setColorTema] = useState("#d4af37");
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-
     if (!storedUser) {
       router.push("/login");
       return;
     }
 
     const parsedUser = JSON.parse(storedUser);
-
     if (parsedUser.role !== "admin") {
       router.push("/login");
       return;
@@ -45,13 +49,13 @@ export default function AdminPage() {
   };
 
   const eliminarVenta = async (id) => {
-    if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
+    if (!confirm("¿Eliminar esta venta?")) return;
     await supabase.from("ventas").delete().eq("id", id);
     fetchVentas();
   };
 
   const eliminarTrabajador = async (id) => {
-    if (!confirm("¿Seguro que deseas eliminar este trabajador?")) return;
+    if (!confirm("¿Eliminar trabajador?")) return;
     await supabase.from("trabajadores").delete().eq("id", id);
     fetchTrabajadores();
   };
@@ -63,16 +67,24 @@ export default function AdminPage() {
     }
 
     await supabase.from("trabajadores").insert([
-      {
-        nombre: nuevoNombre,
-        pin: nuevoPin,
-        role: "trabajador",
-      },
+      { nombre: nuevoNombre, pin: nuevoPin, role: "trabajador" },
     ]);
 
     setNuevoNombre("");
     setNuevoPin("");
     fetchTrabajadores();
+  };
+
+  const cambiarPinAdmin = async () => {
+    if (!nuevoPinAdmin) return alert("Ingresa nuevo PIN");
+
+    await supabase
+      .from("trabajadores")
+      .update({ pin: nuevoPinAdmin })
+      .eq("id", user.id);
+
+    alert("PIN actualizado");
+    setNuevoPinAdmin("");
   };
 
   const totalIngresos = ventas.reduce(
@@ -82,42 +94,33 @@ export default function AdminPage() {
 
   if (!user) return null;
 
+  const backgroundColor = modoClaro ? "#f5f5f5" : "#0a0a0a";
+  const textColor = modoClaro ? "#000" : "#fff";
+
   return (
     <div
       style={{
         display: "flex",
         minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top left, #1a1a1a, #0a0a0a 70%)",
-        color: "white",
+        background: backgroundColor,
+        color: textColor,
         fontFamily: "Segoe UI, sans-serif",
       }}
     >
       {/* Sidebar */}
       <div
         style={{
-          width: "260px",
-          background: "#111",
-          padding: "40px 25px",
-          borderRight: "1px solid #222",
+          width: 260,
+          background: modoClaro ? "#ddd" : "#111",
+          padding: 40,
         }}
       >
-        <h2 style={{ color: "#d4af37", marginBottom: "50px" }}>
-          Imperio S&D 👑
-        </h2>
+        <h2 style={{ color: colorTema }}>Imperio S&D 👑</h2>
 
-        <div style={menuItem(activeTab === "dashboard")} onClick={() => setActiveTab("dashboard")}>
-          Dashboard
-        </div>
-        <div style={menuItem(activeTab === "ventas")} onClick={() => setActiveTab("ventas")}>
-          Ventas
-        </div>
-        <div style={menuItem(activeTab === "usuarios")} onClick={() => setActiveTab("usuarios")}>
-          Usuarios
-        </div>
-        <div style={menuItem(activeTab === "config")} onClick={() => setActiveTab("config")}>
-          Configuración
-        </div>
+        <div style={menuItem(activeTab === "dashboard", colorTema)} onClick={() => setActiveTab("dashboard")}>Dashboard</div>
+        <div style={menuItem(activeTab === "ventas", colorTema)} onClick={() => setActiveTab("ventas")}>Ventas</div>
+        <div style={menuItem(activeTab === "usuarios", colorTema)} onClick={() => setActiveTab("usuarios")}>Usuarios</div>
+        <div style={menuItem(activeTab === "config", colorTema)} onClick={() => setActiveTab("config")}>Configuración</div>
 
         <button
           onClick={() => {
@@ -125,13 +128,12 @@ export default function AdminPage() {
             router.push("/login");
           }}
           style={{
-            marginTop: 50,
+            marginTop: 30,
             background: "#800020",
             border: "none",
-            padding: 12,
+            padding: 10,
             width: "100%",
             color: "white",
-            borderRadius: 8,
             cursor: "pointer",
           }}
         >
@@ -140,173 +142,106 @@ export default function AdminPage() {
       </div>
 
       {/* Contenido */}
-      <div style={{ flex: 1, padding: 60 }}>
+      <div style={{ flex: 1, padding: 50 }}>
 
-        {/* Perfil */}
-        <div style={profileBox}>
-          <div style={avatarStyle}>
-            {user.nombre.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <p style={{ margin: 0, color: "#aaa" }}>BIENVENIDO</p>
-            <h1 style={{ margin: 0, color: "#d4af37" }}>
-              {user.nombre.toUpperCase()}
-            </h1>
-          </div>
-        </div>
+        <h1 style={{ color: colorTema }}>
+          BIENVENIDO {user.nombre.toUpperCase()}
+        </h1>
 
-        {/* DASHBOARD */}
         {activeTab === "dashboard" && (
-          <div style={{ display: "flex", gap: 30 }}>
-            <div style={cardStyle}>
-              <h3>Total Ventas</h3>
-              <h1>{ventas.length}</h1>
-            </div>
-            <div style={cardStyle}>
-              <h3>Ingresos</h3>
-              <h1 style={{ color: "#d4af37" }}>${totalIngresos}</h1>
-            </div>
-            <div style={cardStyle}>
-              <h3>Trabajadores</h3>
-              <h1>{trabajadores.length}</h1>
-            </div>
+          <div style={{ display: "flex", gap: 20 }}>
+            <Card title="Ventas" value={ventas.length} />
+            <Card title="Ingresos" value={`$${totalIngresos}`} color={colorTema} />
+            <Card title="Trabajadores" value={trabajadores.length} />
           </div>
         )}
 
-        {/* VENTAS */}
         {activeTab === "ventas" && (
           <>
             <h2>Ventas</h2>
-            {ventas.map((venta) => (
-              <div key={venta.id} style={cardLine}>
-                <span>${venta.precio}</span>
-                <button onClick={() => eliminarVenta(venta.id)} style={deleteBtn}>
-                  Eliminar
-                </button>
-              </div>
+            {ventas.map((v) => (
+              <Line key={v.id}>
+                ${v.precio}
+                <DeleteBtn onClick={() => eliminarVenta(v.id)} />
+              </Line>
             ))}
           </>
         )}
 
-        {/* USUARIOS */}
         {activeTab === "usuarios" && (
           <>
             <h2>Agregar Trabajador</h2>
 
-            <div style={{ marginBottom: 20 }}>
-              <input
-                placeholder="Nombre"
-                value={nuevoNombre}
-                onChange={(e) => setNuevoNombre(e.target.value)}
-                style={inputStyle}
-              />
-              <input
-                placeholder="PIN"
-                value={nuevoPin}
-                onChange={(e) => setNuevoPin(e.target.value)}
-                style={inputStyle}
-              />
-              <button onClick={agregarTrabajador} style={addBtn}>
-                Agregar
-              </button>
-            </div>
+            <input placeholder="Nombre" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
+            <input placeholder="PIN" value={nuevoPin} onChange={(e) => setNuevoPin(e.target.value)} />
+            <button onClick={agregarTrabajador}>Agregar</button>
 
-            <h2>Lista de Trabajadores</h2>
+            <h2>Lista</h2>
             {trabajadores.map((t) => (
-              <div key={t.id} style={cardLine}>
-                <span>{t.nombre} ({t.role})</span>
-                <button onClick={() => eliminarTrabajador(t.id)} style={deleteBtn}>
-                  Eliminar
-                </button>
-              </div>
+              <Line key={t.id}>
+                {t.nombre} ({t.role})
+                <DeleteBtn onClick={() => eliminarTrabajador(t.id)} />
+              </Line>
             ))}
           </>
         )}
 
-        {/* CONFIG */}
         {activeTab === "config" && (
-          <h2>Configuración próximamente...</h2>
-        )}
+          <>
+            <h2>Configuración</h2>
 
+            <h3>Cambiar mi PIN</h3>
+            <input
+              placeholder="Nuevo PIN"
+              value={nuevoPinAdmin}
+              onChange={(e) => setNuevoPinAdmin(e.target.value)}
+            />
+            <button onClick={cambiarPinAdmin}>Actualizar PIN</button>
+
+            <h3>Modo Visual</h3>
+            <button onClick={() => setModoClaro(!modoClaro)}>
+              {modoClaro ? "Modo Oscuro" : "Modo Claro"}
+            </button>
+
+            <h3>Cambiar Color del Tema</h3>
+            <button onClick={() => setColorTema("#d4af37")}>Dorado</button>
+            <button onClick={() => setColorTema("#9b59b6")}>Morado</button>
+            <button onClick={() => setColorTema("#3498db")}>Azul</button>
+
+            <h3>Información del Sistema</h3>
+            <p>Total Ventas: {ventas.length}</p>
+            <p>Total Trabajadores: {trabajadores.length}</p>
+            <p>Versión: 1.0 Imperio</p>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-/* ESTILOS */
+/* COMPONENTES */
 
-const menuItem = (active) => ({
-  marginBottom: 22,
-  color: active ? "#d4af37" : "#aaa",
+const menuItem = (active, color) => ({
+  marginBottom: 15,
   cursor: "pointer",
+  color: active ? color : "gray",
 });
 
-const cardStyle = {
-  flex: 1,
-  background: "#1c1c1c",
-  padding: 30,
-  borderRadius: 15,
-  border: "1px solid #222",
-};
+const Card = ({ title, value, color }) => (
+  <div style={{ background: "#1c1c1c", padding: 20, borderRadius: 10 }}>
+    <h3>{title}</h3>
+    <h1 style={{ color: color || "white" }}>{value}</h1>
+  </div>
+);
 
-const cardLine = {
-  display: "flex",
-  justifyContent: "space-between",
-  padding: 15,
-  background: "#1c1c1c",
-  marginTop: 10,
-  borderRadius: 10,
-  border: "1px solid #222",
-};
+const Line = ({ children }) => (
+  <div style={{ display: "flex", justifyContent: "space-between", padding: 10, marginTop: 10, background: "#1c1c1c", borderRadius: 8 }}>
+    {children}
+  </div>
+);
 
-const deleteBtn = {
-  background: "#8b0000",
-  border: "none",
-  padding: "6px 12px",
-  color: "white",
-  borderRadius: 6,
-  cursor: "pointer",
-};
-
-const addBtn = {
-  background: "#d4af37",
-  border: "none",
-  padding: "8px 14px",
-  marginLeft: 10,
-  color: "black",
-  borderRadius: 6,
-  cursor: "pointer",
-};
-
-const inputStyle = {
-  padding: 8,
-  marginRight: 10,
-  borderRadius: 6,
-  border: "1px solid #333",
-  background: "#111",
-  color: "white",
-};
-
-const profileBox = {
-  display: "flex",
-  alignItems: "center",
-  gap: 25,
-  marginBottom: 50,
-  padding: 25,
-  background: "#151515",
-  borderRadius: 20,
-  border: "1px solid #222",
-};
-
-const avatarStyle = {
-  width: 80,
-  height: 80,
-  borderRadius: "50%",
-  background: "linear-gradient(135deg, #d4af37, #8b7500)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 30,
-  fontWeight: "bold",
-  color: "#000",
-};
+const DeleteBtn = ({ onClick }) => (
+  <button onClick={onClick} style={{ background: "#8b0000", color: "white", border: "none", padding: 5 }}>
+    Eliminar
+  </button>
+);
