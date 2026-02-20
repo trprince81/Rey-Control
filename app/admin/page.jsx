@@ -24,6 +24,7 @@ export default function AdminPage() {
     }
 
     const parsedUser = JSON.parse(storedUser);
+
     if (parsedUser.role !== "admin") {
       router.push("/login");
       return;
@@ -108,10 +109,12 @@ export default function AdminPage() {
   return (
     <div
       style={{
-        position: "relative",
         display: "flex",
         minHeight: "100vh",
-        backgroundImage: `url(${getBackground()})`,
+        backgroundImage: `
+          linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)),
+          url(${getBackground()})
+        `,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -119,131 +122,185 @@ export default function AdminPage() {
         fontFamily: "Segoe UI, sans-serif",
       }}
     >
-      {/* Overlay */}
+      {/* SIDEBAR */}
       <div
         style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(0,0,0,0.75)",
-          zIndex: 0,
+          width: 260,
+          padding: 40,
+          background: "rgba(0,0,0,0.85)",
         }}
-      />
+      >
+        <h2 style={{ color: "#d4af37" }}>Imperio S&D 👑</h2>
 
-      <div style={{ display: "flex", width: "100%", position: "relative", zIndex: 1 }}>
-
-        {/* Sidebar */}
-        <div style={{ width: 260, padding: 40, background: "rgba(0,0,0,0.8)" }}>
-          <h2 style={{ color: "#d4af37" }}>Imperio S&D 👑</h2>
-
-          <div style={menuItem(activeTab === "dashboard")} onClick={() => setActiveTab("dashboard")}>Dashboard</div>
-          <div style={menuItem(activeTab === "clientes")} onClick={() => setActiveTab("clientes")}>Clientes</div>
-          <div style={menuItem(activeTab === "usuarios")} onClick={() => setActiveTab("usuarios")}>Usuarios</div>
-          <div style={menuItem(activeTab === "config")} onClick={() => setActiveTab("config")}>Configuración</div>
-
-          <button
-            onClick={() => {
-              localStorage.removeItem("user");
-              router.push("/login");
-            }}
-            style={{
-              marginTop: 30,
-              background: "#800020",
-              border: "none",
-              padding: 10,
-              width: "100%",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Cerrar sesión
-          </button>
+        <div style={menuItem(activeTab === "dashboard")} onClick={() => setActiveTab("dashboard")}>
+          Dashboard
         </div>
 
-        {/* Main */}
-        <div style={{ flex: 1, padding: 60 }}>
+        <div style={menuItem(activeTab === "clientes")} onClick={() => setActiveTab("clientes")}>
+          Clientes
+        </div>
 
-          {/* PERFIL PS5 */}
-          <div style={{
+        <div style={menuItem(activeTab === "usuarios")} onClick={() => setActiveTab("usuarios")}>
+          Usuarios
+        </div>
+
+        <div style={menuItem(activeTab === "config")} onClick={() => setActiveTab("config")}>
+          Configuración
+        </div>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("user");
+            router.push("/login");
+          }}
+          style={{
+            marginTop: 30,
+            background: "#800020",
+            border: "none",
+            padding: 12,
+            width: "100%",
+            color: "white",
+            cursor: "pointer",
+            borderRadius: 6,
+          }}
+        >
+          Cerrar sesión
+        </button>
+      </div>
+
+      {/* MAIN */}
+      <div style={{ flex: 1, padding: 60 }}>
+
+        {/* PERFIL ESTILO PS5 */}
+        <div
+          style={{
             display: "flex",
             alignItems: "center",
             gap: 20,
             marginBottom: 40,
-            padding: 20,
+            padding: 25,
             background: "rgba(0,0,0,0.6)",
-            borderRadius: 15
-          }}>
-            <div style={{
-              width: 80,
-              height: 80,
+            borderRadius: 15,
+          }}
+        >
+          <div
+            style={{
+              width: 90,
+              height: 90,
               borderRadius: "50%",
               background: "linear-gradient(135deg,#d4af37,#8b7500)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 30,
+              fontSize: 35,
               fontWeight: "bold",
-              color: "#000"
-            }}>
-              {user.nombre.charAt(0).toUpperCase()}
-            </div>
-
-            <div>
-              <p style={{ margin: 0, color: "#aaa" }}>BIENVENIDO</p>
-              <h1 style={{ margin: 0, color: "#d4af37" }}>
-                {user.nombre.toUpperCase()}
-              </h1>
-            </div>
+              color: "#000",
+            }}
+          >
+            {user.nombre.charAt(0).toUpperCase()}
           </div>
 
-          {/* DASHBOARD */}
-          {activeTab === "dashboard" && (
-            <div style={{ display: "flex", gap: 20 }}>
-              <Card title="Clientes" value={clientes.length} />
-              <Card title="Ingresos" value={`$${totalIngresos}`} />
-              <Card title="Trabajadores" value={trabajadores.length} />
-            </div>
-          )}
+          <div>
+            <p style={{ margin: 0, color: "#aaa" }}>BIENVENIDO</p>
+            <h1 style={{ margin: 0, color: "#d4af37" }}>
+              {user.nombre.toUpperCase()}
+            </h1>
+          </div>
+        </div>
 
-          {/* CLIENTES */}
-          {activeTab === "clientes" &&
-            clientes.map((c) => (
-              <Line key={c.id}>
-                ${c.precio}
-                <DeleteBtn onClick={() => eliminarCliente(c.id)} />
+        {/* DASHBOARD */}
+        {activeTab === "dashboard" && (
+          <div style={{ display: "flex", gap: 20 }}>
+            <Card title="Clientes" value={clientes.length} />
+            <Card title="Ingresos" value={`$${totalIngresos}`} />
+            <Card title="Trabajadores" value={trabajadores.length} />
+          </div>
+        )}
+
+        {/* CLIENTES */}
+        {activeTab === "clientes" &&
+          clientes.map((c) => (
+            <Line key={c.id}>
+              ${c.precio}
+              <DeleteBtn onClick={() => eliminarCliente(c.id)} />
+            </Line>
+          ))}
+
+        {/* USUARIOS */}
+        {activeTab === "usuarios" && (
+          <>
+            <h3>Agregar Trabajador</h3>
+
+            <div style={{ marginBottom: 20 }}>
+              <input
+                placeholder="Nombre"
+                value={nuevoNombre}
+                onChange={(e) => setNuevoNombre(e.target.value)}
+                style={inputStyle}
+              />
+
+              <input
+                placeholder="PIN"
+                value={nuevoPin}
+                onChange={(e) => setNuevoPin(e.target.value)}
+                style={inputStyle}
+              />
+
+              <button onClick={agregarTrabajador} style={goldButton}>
+                Agregar
+              </button>
+            </div>
+
+            {trabajadores.map((t) => (
+              <Line key={t.id}>
+                {t.nombre}
+                <DeleteBtn onClick={() => eliminarTrabajador(t.id)} />
               </Line>
             ))}
+          </>
+        )}
 
-          {/* USUARIOS */}
-          {activeTab === "usuarios" && (
-            <>
-              <h3>Agregar Trabajador</h3>
-              <input placeholder="Nombre" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
-              <input placeholder="PIN" value={nuevoPin} onChange={(e) => setNuevoPin(e.target.value)} />
-              <button onClick={agregarTrabajador}>Agregar</button>
+        {/* CONFIGURACIÓN COMPLETA */}
+        {activeTab === "config" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
 
-              {trabajadores.map((t) => (
-                <Line key={t.id}>
-                  {t.nombre}
-                  <DeleteBtn onClick={() => eliminarTrabajador(t.id)} />
-                </Line>
-              ))}
-            </>
-          )}
+            <div
+              style={{
+                background: "rgba(0,0,0,0.6)",
+                padding: 25,
+                borderRadius: 15,
+              }}
+            >
+              <h2 style={{ color: "#d4af37" }}>Resumen del Imperio 👑</h2>
+              <p>Total Clientes: {clientes.length}</p>
+              <p>Total Trabajadores: {trabajadores.length}</p>
+              <p>Ingresos Totales: ${totalIngresos}</p>
+            </div>
 
-          {/* CONFIG */}
-          {activeTab === "config" && (
-            <>
-              <h3>Cambiar mi PIN</h3>
+            <div
+              style={{
+                background: "rgba(0,0,0,0.6)",
+                padding: 25,
+                borderRadius: 15,
+              }}
+            >
+              <h3 style={{ color: "#d4af37" }}>Cambiar mi PIN</h3>
+
               <input
                 placeholder="Nuevo PIN"
                 value={nuevoPinAdmin}
                 onChange={(e) => setNuevoPinAdmin(e.target.value)}
+                style={inputStyle}
               />
-              <button onClick={cambiarPinAdmin}>Actualizar PIN</button>
-            </>
-          )}
 
-        </div>
+              <button onClick={cambiarPinAdmin} style={goldButton}>
+                Actualizar PIN
+              </button>
+            </div>
+
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -252,26 +309,71 @@ export default function AdminPage() {
 /* ESTILOS */
 
 const menuItem = (active) => ({
-  marginBottom: 15,
+  marginBottom: 18,
   cursor: "pointer",
   color: active ? "#d4af37" : "#aaa",
+  fontWeight: active ? "bold" : "normal",
 });
 
 const Card = ({ title, value }) => (
-  <div style={{ background: "rgba(0,0,0,0.6)", padding: 20, borderRadius: 10 }}>
+  <div
+    style={{
+      background: "rgba(0,0,0,0.6)",
+      padding: 25,
+      borderRadius: 12,
+      minWidth: 200,
+    }}
+  >
     <h3>{title}</h3>
     <h1>{value}</h1>
   </div>
 );
 
 const Line = ({ children }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", padding: 10, marginTop: 10, background: "rgba(0,0,0,0.6)", borderRadius: 8 }}>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      padding: 12,
+      marginTop: 12,
+      background: "rgba(0,0,0,0.6)",
+      borderRadius: 8,
+    }}
+  >
     {children}
   </div>
 );
 
 const DeleteBtn = ({ onClick }) => (
-  <button onClick={onClick} style={{ background: "#8b0000", color: "white", border: "none", padding: 5 }}>
+  <button
+    onClick={onClick}
+    style={{
+      background: "#8b0000",
+      color: "white",
+      border: "none",
+      padding: 6,
+      borderRadius: 4,
+      cursor: "pointer",
+    }}
+  >
     Eliminar
   </button>
 );
+
+const inputStyle = {
+  padding: 10,
+  marginRight: 10,
+  borderRadius: 6,
+  border: "none",
+  marginBottom: 10,
+};
+
+const goldButton = {
+  padding: 10,
+  background: "#d4af37",
+  border: "none",
+  color: "black",
+  fontWeight: "bold",
+  cursor: "pointer",
+  borderRadius: 6,
+};
