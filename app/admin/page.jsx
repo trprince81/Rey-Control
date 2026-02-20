@@ -11,6 +11,9 @@ export default function AdminPage() {
   const [trabajadores, setTrabajadores] = useState([]);
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nuevoPin, setNuevoPin] = useState("");
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
@@ -53,6 +56,25 @@ export default function AdminPage() {
     fetchTrabajadores();
   };
 
+  const agregarTrabajador = async () => {
+    if (!nuevoNombre || !nuevoPin) {
+      alert("Completa nombre y PIN");
+      return;
+    }
+
+    await supabase.from("trabajadores").insert([
+      {
+        nombre: nuevoNombre,
+        pin: nuevoPin,
+        role: "trabajador",
+      },
+    ]);
+
+    setNuevoNombre("");
+    setNuevoPin("");
+    fetchTrabajadores();
+  };
+
   const totalIngresos = ventas.reduce(
     (acc, v) => acc + Number(v.precio),
     0
@@ -75,33 +97,24 @@ export default function AdminPage() {
       <div
         style={{
           width: "260px",
-          background: "linear-gradient(180deg, #111, #0d0d0d)",
+          background: "#111",
           padding: "40px 25px",
           borderRight: "1px solid #222",
         }}
       >
-        <h2
-          style={{
-            color: "#d4af37",
-            marginBottom: "50px",
-            textShadow: "0 0 15px rgba(212,175,55,0.6)",
-          }}
-        >
+        <h2 style={{ color: "#d4af37", marginBottom: "50px" }}>
           Imperio S&D 👑
         </h2>
 
         <div style={menuItem(activeTab === "dashboard")} onClick={() => setActiveTab("dashboard")}>
           Dashboard
         </div>
-
         <div style={menuItem(activeTab === "ventas")} onClick={() => setActiveTab("ventas")}>
           Ventas
         </div>
-
         <div style={menuItem(activeTab === "usuarios")} onClick={() => setActiveTab("usuarios")}>
           Usuarios
         </div>
-
         <div style={menuItem(activeTab === "config")} onClick={() => setActiveTab("config")}>
           Configuración
         </div>
@@ -129,12 +142,11 @@ export default function AdminPage() {
       {/* Contenido */}
       <div style={{ flex: 1, padding: 60 }}>
 
-        {/* PERFIL */}
+        {/* Perfil */}
         <div style={profileBox}>
           <div style={avatarStyle}>
             {user.nombre.charAt(0).toUpperCase()}
           </div>
-
           <div>
             <p style={{ margin: 0, color: "#aaa" }}>BIENVENIDO</p>
             <h1 style={{ margin: 0, color: "#d4af37" }}>
@@ -143,31 +155,28 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* CONTENIDO DINÁMICO */}
+        {/* DASHBOARD */}
         {activeTab === "dashboard" && (
-          <>
-            <div style={{ display: "flex", gap: 30, marginBottom: 40 }}>
-              <div style={cardStyle}>
-                <h3>Total Ventas</h3>
-                <h1>{ventas.length}</h1>
-              </div>
-
-              <div style={cardStyle}>
-                <h3>Ingresos Totales</h3>
-                <h1 style={{ color: "#d4af37" }}>${totalIngresos}</h1>
-              </div>
-
-              <div style={cardStyle}>
-                <h3>Trabajadores</h3>
-                <h1>{trabajadores.length}</h1>
-              </div>
+          <div style={{ display: "flex", gap: 30 }}>
+            <div style={cardStyle}>
+              <h3>Total Ventas</h3>
+              <h1>{ventas.length}</h1>
             </div>
-          </>
+            <div style={cardStyle}>
+              <h3>Ingresos</h3>
+              <h1 style={{ color: "#d4af37" }}>${totalIngresos}</h1>
+            </div>
+            <div style={cardStyle}>
+              <h3>Trabajadores</h3>
+              <h1>{trabajadores.length}</h1>
+            </div>
+          </div>
         )}
 
+        {/* VENTAS */}
         {activeTab === "ventas" && (
           <>
-            <h2>Ventas Registradas</h2>
+            <h2>Ventas</h2>
             {ventas.map((venta) => (
               <div key={venta.id} style={cardLine}>
                 <span>${venta.precio}</span>
@@ -179,9 +188,30 @@ export default function AdminPage() {
           </>
         )}
 
+        {/* USUARIOS */}
         {activeTab === "usuarios" && (
           <>
-            <h2>Trabajadores</h2>
+            <h2>Agregar Trabajador</h2>
+
+            <div style={{ marginBottom: 20 }}>
+              <input
+                placeholder="Nombre"
+                value={nuevoNombre}
+                onChange={(e) => setNuevoNombre(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                placeholder="PIN"
+                value={nuevoPin}
+                onChange={(e) => setNuevoPin(e.target.value)}
+                style={inputStyle}
+              />
+              <button onClick={agregarTrabajador} style={addBtn}>
+                Agregar
+              </button>
+            </div>
+
+            <h2>Lista de Trabajadores</h2>
             {trabajadores.map((t) => (
               <div key={t.id} style={cardLine}>
                 <span>{t.nombre} ({t.role})</span>
@@ -193,11 +223,9 @@ export default function AdminPage() {
           </>
         )}
 
+        {/* CONFIG */}
         {activeTab === "config" && (
-          <>
-            <h2>Configuración</h2>
-            <p>Modo visual y ajustes próximamente...</p>
-          </>
+          <h2>Configuración próximamente...</h2>
         )}
 
       </div>
@@ -205,7 +233,7 @@ export default function AdminPage() {
   );
 }
 
-/* ---------- ESTILOS ---------- */
+/* ESTILOS */
 
 const menuItem = (active) => ({
   marginBottom: 22,
@@ -238,6 +266,25 @@ const deleteBtn = {
   color: "white",
   borderRadius: 6,
   cursor: "pointer",
+};
+
+const addBtn = {
+  background: "#d4af37",
+  border: "none",
+  padding: "8px 14px",
+  marginLeft: 10,
+  color: "black",
+  borderRadius: 6,
+  cursor: "pointer",
+};
+
+const inputStyle = {
+  padding: 8,
+  marginRight: 10,
+  borderRadius: 6,
+  border: "1px solid #333",
+  background: "#111",
+  color: "white",
 };
 
 const profileBox = {
