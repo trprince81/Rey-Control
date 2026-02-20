@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AdminPage() {
+export default function TrabajadorPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
@@ -17,7 +17,7 @@ export default function AdminPage() {
 
     const parsedUser = JSON.parse(storedUser);
 
-    if (parsedUser.role !== "admin") {
+    if (parsedUser.role !== "trabajador") {
       router.push("/login");
       return;
     }
@@ -28,11 +28,8 @@ export default function AdminPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-3xl font-bold text-yellow-400 mb-6">
-        Panel Admin 👑
-      </h1>
-
+    <div style={{ minHeight: "100vh", background: "black", color: "white", padding: 40 }}>
+      <h1 style={{ color: "purple" }}>Panel Trabajador 💼</h1>
       <p>Bienvenido, {user.nombre}</p>
     </div>
   );
