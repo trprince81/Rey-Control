@@ -1,64 +1,73 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
-export default function TrabajadorPage() {
+export default function WorkerPanel() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [clientes, setClientes] = useState([]);
-  const [precio, setPrecio] = useState("");
+  const [monto, setMonto] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) return router.push("/login");
+    if (!storedUser) {
+      router.push("/login");
+      return;
+    }
 
-    const parsedUser = JSON.parse(storedUser);
-    if (parsedUser.role !== "trabajador") return router.push("/login");
+    const parsed = JSON.parse(storedUser);
 
-    setUser(parsedUser);
-    fetchClientes(parsedUser.id);
+    if (parsed.role !== "trabajador") {
+      router.push("/login");
+      return;
+    }
+
+    setUser(parsed);
+    fetchClientes(parsed.id);
   }, []);
 
-  const fetchClientes = async (id) => {
+  const fetchClientes = async (trabajadorId) => {
     const { data } = await supabase
       .from("ventas")
       .select("*")
-      .eq("trabajador_id", id)
+      .eq("trabajador_id", trabajadorId)
       .order("created_at", { ascending: false });
 
     if (data) setClientes(data);
   };
 
   const agregarCliente = async () => {
-    if (!precio) return alert("Ingresa monto");
-    if (!confirm("¿Seguro que deseas agregar este cliente?")) return;
+    if (!monto) return alert("Ingresa un monto");
+
+    const confirmacion = confirm("¿Seguro que deseas agregar este cliente?");
+    if (!confirmacion) return;
 
     await supabase.from("ventas").insert([
       {
         trabajador_id: user.id,
-        precio,
-        estado: "pendiente",
+        precio: Number(monto),
+        estado: "pagado", // 🔥 Se guarda automáticamente como pagado
       },
     ]);
 
-    setPrecio("");
+    setMonto("");
     fetchClientes(user.id);
   };
 
-  const cambiarEstado = async (cliente, nuevoEstado) => {
-    await supabase
-      .from("ventas")
-      .update({ estado: nuevoEstado })
-      .eq("id", cliente.id);
+  const eliminarCliente = async (id) => {
+    const confirmacion = confirm("¿Eliminar este cliente?");
+    if (!confirmacion) return;
 
+    await supabase.from("ventas").delete().eq("id", id);
     fetchClientes(user.id);
   };
 
-  const total = clientes
+  // 🔥 Solo suma los que estén pagados
+  const totalGanado = clientes
     .filter((c) => c.estado === "pagado")
-    .reduce((acc, c) => acc + Number(c.total_trabajador || 0), 0);
+    .reduce((acc, c) => acc + Number(c.precio) * 0.35, 0);
 
   if (!user) return null;
 
@@ -66,150 +75,121 @@ export default function TrabajadorPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('/bg-dashboard.jpg')",
-        backgroundSize: "cover",
+        background: "black",
         color: "white",
         padding: 40,
-        fontFamily: "Segoe UI, sans-serif",
+        fontFamily: "Segoe UI",
       }}
     >
-      {/* PERFIL PS5 */}
-      <div style={profileCard}>
-        <div style={avatar}>{user.nombre.charAt(0)}</div>
-        <div>
-          <h2 style={{ margin: 0, color: "#d4af37" }}>
-            {user.nombre.toUpperCase()}
-          </h2>
-          <p style={{ margin: 0 }}>Panel de Trabajo</p>
-        </div>
+      {/* PERFIL */}
+      <div
+        style={{
+          background: "linear-gradient(135deg,#7f00ff,#e100ff)",
+          padding: 20,
+          borderRadius: 20,
+          marginBottom: 30,
+        }}
+      >
+        <h2>{user.nombre.toUpperCase()}</h2>
+        <p>Panel de Trabajo</p>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("user");
+            router.push("/login");
+          }}
+          style={{
+            marginTop: 10,
+            background: "#ff004c",
+            border: "none",
+            padding: "8px 15px",
+            borderRadius: 6,
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Cerrar sesión
+        </button>
       </div>
 
       {/* TOTAL */}
-      <div style={totalCard}>
-        💰 Total Ganado (35%): <b>${total}</b>
+      <div
+        style={{
+          background: "linear-gradient(90deg,#ffd700,#ffae00)",
+          padding: 15,
+          borderRadius: 12,
+          marginBottom: 30,
+          color: "black",
+          fontWeight: "bold",
+          fontSize: 18,
+        }}
+      >
+        💰 Total Ganado (35%): ${totalGanado.toFixed(2)}
       </div>
 
       {/* AGREGAR CLIENTE */}
-      <div style={box}>
-        <h3>Agregar Cliente</h3>
+      <h3>Agregar Cliente</h3>
+      <div style={{ marginBottom: 30 }}>
         <input
           placeholder="Monto"
-          value={precio}
-          onChange={(e) => setPrecio(e.target.value)}
-          style={inputStyle}
+          value={monto}
+          onChange={(e) => setMonto(e.target.value)}
+          style={{
+            padding: 10,
+            borderRadius: 6,
+            border: "none",
+            marginRight: 10,
+          }}
         />
-        <button onClick={agregarCliente} style={goldButton}>
+        <button
+          onClick={agregarCliente}
+          style={{
+            padding: 10,
+            background: "#ffd700",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
           Agregar
         </button>
       </div>
 
       {/* LISTA CLIENTES */}
-      <div style={{ marginTop: 30 }}>
-        <h3>Mis Clientes</h3>
+      <h3>Mis Clientes</h3>
 
-        {clientes.map((c) => (
-          <div key={c.id} style={clienteCard}>
-            <p>Monto: ${c.precio}</p>
-            <p>Estado: <span style={estadoColor(c.estado)}>{c.estado}</span></p>
+      {clientes.map((c) => (
+        <div
+          key={c.id}
+          style={{
+            background: "#111",
+            padding: 15,
+            borderRadius: 12,
+            marginBottom: 15,
+            border: "1px solid #7f00ff",
+          }}
+        >
+          <p>Monto: ${c.precio}</p>
+          <p style={{ color: "#00ff88", fontWeight: "bold" }}>
+            Estado: {c.estado}
+          </p>
 
-            <div style={{ marginTop: 10 }}>
-              <button onClick={() => cambiarEstado(c, "va a llamar")} style={btnBlue}>Va a llamar</button>
-              <button onClick={() => cambiarEstado(c, "en camino")} style={btnOrange}>En camino</button>
-              <button onClick={() => cambiarEstado(c, "llego")} style={btnPurple}>Llegó</button>
-              <button onClick={() => cambiarEstado(c, "entro")} style={btnYellow}>Entró</button>
-              <button onClick={() => cambiarEstado(c, "pagado")} style={btnGreen}>Pagado</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          <button
+            style={{
+              background: "#ff0033",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: 6,
+              cursor: "pointer",
+            }}
+            onClick={() => eliminarCliente(c.id)}
+          >
+            Eliminar
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
-
-/* ESTILOS */
-
-const profileCard = {
-  display: "flex",
-  alignItems: "center",
-  gap: 20,
-  marginBottom: 30,
-  padding: 20,
-  background: "rgba(0,0,0,0.6)",
-  borderRadius: 15,
-  boxShadow: "0 0 20px #8000ff",
-};
-
-const avatar = {
-  width: 80,
-  height: 80,
-  borderRadius: "50%",
-  background: "linear-gradient(135deg,#8000ff,#d4af37)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 30,
-  fontWeight: "bold",
-};
-
-const totalCard = {
-  padding: 15,
-  marginBottom: 20,
-  background: "rgba(0,0,0,0.6)",
-  borderRadius: 12,
-  boxShadow: "0 0 15px #d4af37",
-};
-
-const box = {
-  padding: 20,
-  background: "rgba(0,0,0,0.6)",
-  borderRadius: 12,
-};
-
-const clienteCard = {
-  marginTop: 15,
-  padding: 15,
-  background: "rgba(0,0,0,0.6)",
-  borderRadius: 10,
-  boxShadow: "0 0 10px #8000ff",
-};
-
-const inputStyle = {
-  padding: 10,
-  marginRight: 10,
-  borderRadius: 6,
-  border: "none",
-};
-
-const goldButton = {
-  padding: 10,
-  background: "#d4af37",
-  border: "none",
-  color: "black",
-  fontWeight: "bold",
-  borderRadius: 6,
-  cursor: "pointer",
-};
-
-const estadoColor = (estado) => {
-  switch (estado) {
-    case "va a llamar":
-      return { color: "#2196f3" };
-    case "en camino":
-      return { color: "#ff9800" };
-    case "llego":
-      return { color: "#9c27b0" };
-    case "entro":
-      return { color: "#ffc107" };
-    case "pagado":
-      return { color: "#00c853" };
-    default:
-      return { color: "white" };
-  }
-};
-
-const btnBlue = { marginRight: 5, background: "#2196f3", color: "white", border: "none", padding: 5 };
-const btnOrange = { marginRight: 5, background: "#ff9800", color: "white", border: "none", padding: 5 };
-const btnPurple = { marginRight: 5, background: "#9c27b0", color: "white", border: "none", padding: 5 };
-const btnYellow = { marginRight: 5, background: "#ffc107", color: "black", border: "none", padding: 5 };
-const btnGreen = { marginRight: 5, background: "#00c853", color: "black", border: "none", padding: 5 };
