@@ -17,9 +17,6 @@ export default function AdminPage() {
 
   const [nuevoPinAdmin, setNuevoPinAdmin] = useState("");
 
-  const [modoClaro, setModoClaro] = useState(false);
-  const [colorTema, setColorTema] = useState("#d4af37");
-
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -49,7 +46,7 @@ export default function AdminPage() {
   };
 
   const eliminarVenta = async (id) => {
-    if (!confirm("¿Eliminar esta venta?")) return;
+    if (!confirm("¿Eliminar venta?")) return;
     await supabase.from("ventas").delete().eq("id", id);
     fetchVentas();
   };
@@ -94,148 +91,144 @@ export default function AdminPage() {
 
   if (!user) return null;
 
-  const backgroundColor = modoClaro ? "#f5f5f5" : "#0a0a0a";
-  const textColor = modoClaro ? "#000" : "#fff";
+  const getBackgroundImage = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return "/bg-dashboard.jpg";
+      case "ventas":
+        return "/bg-ventas.jpg";
+      case "usuarios":
+        return "/bg-usuarios.jpg";
+      case "config":
+        return "/bg-config.jpg";
+      default:
+        return "/bg-dashboard.jpg";
+    }
+  };
 
   return (
     <div
       style={{
         display: "flex",
         minHeight: "100vh",
-        background: backgroundColor,
-        color: textColor,
+        backgroundImage: `url(${getBackgroundImage()})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        color: "white",
         fontFamily: "Segoe UI, sans-serif",
       }}
     >
-      {/* Sidebar */}
+      {/* Overlay oscuro */}
       <div
         style={{
-          width: 260,
-          background: modoClaro ? "#ddd" : "#111",
-          padding: 40,
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.75)",
+          zIndex: 0,
         }}
-      >
-        <h2 style={{ color: colorTema }}>Imperio S&D 👑</h2>
+      />
 
-        <div style={menuItem(activeTab === "dashboard", colorTema)} onClick={() => setActiveTab("dashboard")}>Dashboard</div>
-        <div style={menuItem(activeTab === "ventas", colorTema)} onClick={() => setActiveTab("ventas")}>Ventas</div>
-        <div style={menuItem(activeTab === "usuarios", colorTema)} onClick={() => setActiveTab("usuarios")}>Usuarios</div>
-        <div style={menuItem(activeTab === "config", colorTema)} onClick={() => setActiveTab("config")}>Configuración</div>
+      {/* Contenido encima */}
+      <div style={{ display: "flex", width: "100%", position: "relative", zIndex: 1 }}>
 
-        <button
-          onClick={() => {
-            localStorage.removeItem("user");
-            router.push("/login");
-          }}
-          style={{
-            marginTop: 30,
-            background: "#800020",
-            border: "none",
-            padding: 10,
-            width: "100%",
-            color: "white",
-            cursor: "pointer",
-          }}
-        >
-          Cerrar sesión
-        </button>
-      </div>
+        {/* Sidebar */}
+        <div style={{ width: 260, padding: 40, background: "rgba(0,0,0,0.8)" }}>
+          <h2 style={{ color: "#d4af37" }}>Imperio S&D 👑</h2>
 
-      {/* Contenido */}
-      <div style={{ flex: 1, padding: 50 }}>
+          <div style={menuItem(activeTab === "dashboard")} onClick={() => setActiveTab("dashboard")}>Dashboard</div>
+          <div style={menuItem(activeTab === "ventas")} onClick={() => setActiveTab("ventas")}>Ventas</div>
+          <div style={menuItem(activeTab === "usuarios")} onClick={() => setActiveTab("usuarios")}>Usuarios</div>
+          <div style={menuItem(activeTab === "config")} onClick={() => setActiveTab("config")}>Configuración</div>
 
-        <h1 style={{ color: colorTema }}>
-          BIENVENIDO {user.nombre.toUpperCase()}
-        </h1>
+          <button
+            onClick={() => {
+              localStorage.removeItem("user");
+              router.push("/login");
+            }}
+            style={{
+              marginTop: 30,
+              background: "#800020",
+              border: "none",
+              padding: 10,
+              width: "100%",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Cerrar sesión
+          </button>
+        </div>
 
-        {activeTab === "dashboard" && (
-          <div style={{ display: "flex", gap: 20 }}>
-            <Card title="Ventas" value={ventas.length} />
-            <Card title="Ingresos" value={`$${totalIngresos}`} color={colorTema} />
-            <Card title="Trabajadores" value={trabajadores.length} />
-          </div>
-        )}
+        {/* Main */}
+        <div style={{ flex: 1, padding: 50 }}>
 
-        {activeTab === "ventas" && (
-          <>
-            <h2>Ventas</h2>
-            {ventas.map((v) => (
+          <h1 style={{ color: "#d4af37" }}>
+            BIENVENIDO {user.nombre.toUpperCase()}
+          </h1>
+
+          {activeTab === "dashboard" && (
+            <div style={{ display: "flex", gap: 20 }}>
+              <Card title="Ventas" value={ventas.length} />
+              <Card title="Ingresos" value={`$${totalIngresos}`} />
+              <Card title="Trabajadores" value={trabajadores.length} />
+            </div>
+          )}
+
+          {activeTab === "ventas" &&
+            ventas.map((v) => (
               <Line key={v.id}>
                 ${v.precio}
                 <DeleteBtn onClick={() => eliminarVenta(v.id)} />
               </Line>
             ))}
-          </>
-        )}
 
-        {activeTab === "usuarios" && (
-          <>
-            <h2>Agregar Trabajador</h2>
+          {activeTab === "usuarios" && (
+            <>
+              <input placeholder="Nombre" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
+              <input placeholder="PIN" value={nuevoPin} onChange={(e) => setNuevoPin(e.target.value)} />
+              <button onClick={agregarTrabajador}>Agregar</button>
 
-            <input placeholder="Nombre" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
-            <input placeholder="PIN" value={nuevoPin} onChange={(e) => setNuevoPin(e.target.value)} />
-            <button onClick={agregarTrabajador}>Agregar</button>
+              {trabajadores.map((t) => (
+                <Line key={t.id}>
+                  {t.nombre}
+                  <DeleteBtn onClick={() => eliminarTrabajador(t.id)} />
+                </Line>
+              ))}
+            </>
+          )}
 
-            <h2>Lista</h2>
-            {trabajadores.map((t) => (
-              <Line key={t.id}>
-                {t.nombre} ({t.role})
-                <DeleteBtn onClick={() => eliminarTrabajador(t.id)} />
-              </Line>
-            ))}
-          </>
-        )}
-
-        {activeTab === "config" && (
-          <>
-            <h2>Configuración</h2>
-
-            <h3>Cambiar mi PIN</h3>
-            <input
-              placeholder="Nuevo PIN"
-              value={nuevoPinAdmin}
-              onChange={(e) => setNuevoPinAdmin(e.target.value)}
-            />
-            <button onClick={cambiarPinAdmin}>Actualizar PIN</button>
-
-            <h3>Modo Visual</h3>
-            <button onClick={() => setModoClaro(!modoClaro)}>
-              {modoClaro ? "Modo Oscuro" : "Modo Claro"}
-            </button>
-
-            <h3>Cambiar Color del Tema</h3>
-            <button onClick={() => setColorTema("#d4af37")}>Dorado</button>
-            <button onClick={() => setColorTema("#9b59b6")}>Morado</button>
-            <button onClick={() => setColorTema("#3498db")}>Azul</button>
-
-            <h3>Información del Sistema</h3>
-            <p>Total Ventas: {ventas.length}</p>
-            <p>Total Trabajadores: {trabajadores.length}</p>
-            <p>Versión: 1.0 Imperio</p>
-          </>
-        )}
+          {activeTab === "config" && (
+            <>
+              <input
+                placeholder="Nuevo PIN"
+                value={nuevoPinAdmin}
+                onChange={(e) => setNuevoPinAdmin(e.target.value)}
+              />
+              <button onClick={cambiarPinAdmin}>Actualizar PIN</button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-/* COMPONENTES */
-
-const menuItem = (active, color) => ({
+const menuItem = (active) => ({
   marginBottom: 15,
   cursor: "pointer",
-  color: active ? color : "gray",
+  color: active ? "#d4af37" : "#aaa",
 });
 
-const Card = ({ title, value, color }) => (
-  <div style={{ background: "#1c1c1c", padding: 20, borderRadius: 10 }}>
+const Card = ({ title, value }) => (
+  <div style={{ background: "rgba(0,0,0,0.6)", padding: 20, borderRadius: 10 }}>
     <h3>{title}</h3>
-    <h1 style={{ color: color || "white" }}>{value}</h1>
+    <h1>{value}</h1>
   </div>
 );
 
 const Line = ({ children }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", padding: 10, marginTop: 10, background: "#1c1c1c", borderRadius: 8 }}>
+  <div style={{ display: "flex", justifyContent: "space-between", padding: 10, marginTop: 10, background: "rgba(0,0,0,0.6)", borderRadius: 8 }}>
     {children}
   </div>
 );
