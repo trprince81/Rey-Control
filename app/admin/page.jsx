@@ -35,9 +35,8 @@ export default function AdminPage() {
     fetchTrabajadores();
   }, []);
 
-  // 🔥 MEJORADO PARA TRAER EL NOMBRE DEL TRABAJADOR
   const fetchClientes = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("ventas")
       .select(`
         id,
@@ -50,9 +49,7 @@ export default function AdminPage() {
       `)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setClientes(data);
-    }
+    if (data) setClientes(data);
   };
 
   const fetchTrabajadores = async () => {
@@ -97,6 +94,15 @@ export default function AdminPage() {
 
     alert("PIN actualizado");
     setNuevoPinAdmin("");
+  };
+
+  const cambiarEstado = async (id, nuevoEstado) => {
+    await supabase
+      .from("ventas")
+      .update({ estado: nuevoEstado })
+      .eq("id", id);
+
+    fetchClientes();
   };
 
   const totalIngresos = clientes
@@ -224,11 +230,22 @@ export default function AdminPage() {
 
         {/* DASHBOARD */}
         {activeTab === "dashboard" && (
-          <div style={{ display: "flex", gap: 20 }}>
-            <Card title="Clientes" value={clientes.length} />
-            <Card title="Ingresos (Pagados)" value={`$${totalIngresos}`} />
-            <Card title="Trabajadores" value={trabajadores.length} />
-          </div>
+          <>
+            <div style={{ display: "flex", gap: 20 }}>
+              <Card title="Clientes" value={clientes.length} />
+              <Card title="Ingresos (Pagados)" value={`$${totalIngresos}`} />
+              <Card title="Trabajadores" value={trabajadores.length} />
+            </div>
+
+            <div style={{ marginTop: 40 }}>
+              <h3>Últimos Clientes</h3>
+              {clientes.slice(0, 5).map((c) => (
+                <Line key={c.id}>
+                  {c.trabajadores?.nombre} — ${c.precio} — {c.estado}
+                </Line>
+              ))}
+            </div>
+          </>
         )}
 
         {/* CLIENTES */}
@@ -245,7 +262,26 @@ export default function AdminPage() {
                 <p style={{ margin: 0 }}>
                   Estado: {c.estado || "pendiente"}
                 </p>
+
+                {c.estado !== "pagado" && (
+                  <button
+                    onClick={() => cambiarEstado(c.id, "pagado")}
+                    style={{
+                      marginTop: 5,
+                      background: "#00c853",
+                      border: "none",
+                      padding: 6,
+                      borderRadius: 4,
+                      cursor: "pointer",
+                      color: "black",
+                      fontWeight: "bold"
+                    }}
+                  >
+                    Marcar como Pagado
+                  </button>
+                )}
               </div>
+
               <DeleteBtn onClick={() => eliminarCliente(c.id)} />
             </Line>
           ))}
@@ -287,26 +323,32 @@ export default function AdminPage() {
         {/* CONFIG */}
         {activeTab === "config" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
-            <div
-              style={{
-                background: "rgba(0,0,0,0.6)",
-                padding: 25,
-                borderRadius: 15,
-              }}
-            >
+            <div style={{ background: "rgba(0,0,0,0.6)", padding: 25, borderRadius: 15 }}>
               <h2 style={{ color: "#d4af37" }}>Resumen del Imperio 👑</h2>
               <p>Total Clientes: {clientes.length}</p>
               <p>Total Trabajadores: {trabajadores.length}</p>
               <p>Ingresos Totales: ${totalIngresos}</p>
+
+              <h3 style={{ marginTop: 20 }}>Ganancias por Trabajador</h3>
+
+              {trabajadores.map((t) => {
+                const total = clientes
+                  .filter(
+                    (c) =>
+                      c.trabajadores?.nombre === t.nombre &&
+                      c.estado === "pagado"
+                  )
+                  .reduce((acc, c) => acc + Number(c.precio), 0);
+
+                return (
+                  <p key={t.id}>
+                    {t.nombre} — ${total}
+                  </p>
+                );
+              })}
             </div>
 
-            <div
-              style={{
-                background: "rgba(0,0,0,0.6)",
-                padding: 25,
-                borderRadius: 15,
-              }}
-            >
+            <div style={{ background: "rgba(0,0,0,0.6)", padding: 25, borderRadius: 15 }}>
               <h3 style={{ color: "#d4af37" }}>Cambiar mi PIN</h3>
 
               <input
@@ -337,30 +379,14 @@ const menuItem = (active) => ({
 });
 
 const Card = ({ title, value }) => (
-  <div
-    style={{
-      background: "rgba(0,0,0,0.6)",
-      padding: 25,
-      borderRadius: 12,
-      minWidth: 200,
-    }}
-  >
+  <div style={{ background: "rgba(0,0,0,0.6)", padding: 25, borderRadius: 12, minWidth: 200 }}>
     <h3>{title}</h3>
     <h1>{value}</h1>
   </div>
 );
 
 const Line = ({ children }) => (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      padding: 12,
-      marginTop: 12,
-      background: "rgba(0,0,0,0.6)",
-      borderRadius: 8,
-    }}
-  >
+  <div style={{ display: "flex", justifyContent: "space-between", padding: 12, marginTop: 12, background: "rgba(0,0,0,0.6)", borderRadius: 8 }}>
     {children}
   </div>
 );
